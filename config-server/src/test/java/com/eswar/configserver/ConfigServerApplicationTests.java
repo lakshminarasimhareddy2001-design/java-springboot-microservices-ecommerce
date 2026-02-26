@@ -1,10 +1,10 @@
-package com.eswar.ecommerce;
+package com.eswar.configserver;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class EcommerceApplicationTests {
+class ConfigServerApplicationTests {
 
 	@Test
 	void contextLoads() {

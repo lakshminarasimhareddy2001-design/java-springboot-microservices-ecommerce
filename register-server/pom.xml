@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.eswar</groupId>
-	<artifactId>ecommerce</artifactId>
+	<artifactId>rigister-server</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>ecommerce</name>
 	<description> project for register server</description>
