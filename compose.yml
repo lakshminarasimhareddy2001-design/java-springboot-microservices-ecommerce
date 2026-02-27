@@ -1,0 +1,67 @@
+services:
+
+  postgres:
+    image: postgres:latest
+    container_name: ecommerce_db
+    ports:
+      - "5430:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ecommerce_db
+    networks:
+      - backend
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - backend
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - backend
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # Internal communication
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+
+      # Required configs
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    depends_on:
+      - postgres
+    networks:
+      - backend
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://postgres:5432/ecommerce_db
+      SONAR_JDBC_USERNAME: admin
+      SONAR_JDBC_PASSWORD: admin
+    volumes:
+      - ./data/sonarqube:/opt/sonarqube/data
+
+networks:
+  backend:
+    driver: bridge

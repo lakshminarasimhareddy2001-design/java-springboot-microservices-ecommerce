@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.eswar</groupId>
-	<artifactId>rigister-server</artifactId>
+	<artifactId>register-server</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ecommerce</name>
+	<name>register-server</name>
 	<description> project for register server</description>
 	<url/>
 	<licenses>
