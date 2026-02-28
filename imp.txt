@@ -1,0 +1,2 @@
+sonar  user: admin
+       password: 9908418196eswaR@

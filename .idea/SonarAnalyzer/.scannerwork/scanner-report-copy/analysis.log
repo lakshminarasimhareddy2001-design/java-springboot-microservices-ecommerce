@@ -1,0 +1,50 @@
+Plugins:
+Bundled analyzers:
+  - Clean as You Code 2.6.0.3665 (cayc)
+  - IaC Code Quality and Security 2.5.0.18803 (iac)
+  - Text Code Quality and Security 2.38.0.10279 (text)
+Global server settings:
+  - sonar.azureresourcemanager.file.suffixes=.bicep
+  - sonar.core.id=A4164B5B-AZyit_iAg_SSkigDNZfV
+  - sonar.core.startTime=2026-02-28T13:54:45+0000
+  - sonar.cs.file.suffixes=.cs,.razor
+  - sonar.css.file.suffixes=.css,.less,.scss,.sass
+  - sonar.docker.file.patterns=*.dockerfile,Dockerfile,dockerfile
+  - sonar.flex.file.suffixes=as
+  - sonar.forceAuthentication=true
+  - sonar.go.file.suffixes=.go
+  - sonar.html.file.suffixes=.html,.xhtml,.cshtml,.vbhtml,.aspx,.ascx,.rhtml,.erb,.shtm,.shtml,.cmp,.twig
+  - sonar.ipynb.file.suffixes=ipynb
+  - sonar.java.file.suffixes=.java,.jav
+  - sonar.java.jvmframeworkconfig.file.patterns=**/src/main/resources/**/*app*.properties,**/src/main/resources/**/*app*.yaml,**/src/main/resources/**/*app*.yml
+  - sonar.javascript.file.suffixes=.js,.jsx,.cjs,.mjs,.vue
+  - sonar.json.file.suffixes=.json
+  - sonar.jsp.file.suffixes=.jsp,.jspf,.jspx
+  - sonar.kotlin.file.suffixes=.kt,.kts
+  - sonar.multi-quality-mode.enabled=true
+  - sonar.php.file.suffixes=php,php3,php4,php5,phtml,inc
+  - sonar.python.file.suffixes=py
+  - sonar.qualityProfiles.allowDisableInheritedRules=true
+  - sonar.ruby.file.suffixes=.rb
+  - sonar.rust.file.suffixes=.rs
+  - sonar.scala.file.suffixes=.scala
+  - sonar.terraform.file.suffixes=.tf
+  - sonar.typescript.file.suffixes=.ts,.tsx,.cts,.mts
+  - sonar.vbnet.file.suffixes=.vb
+  - sonar.xml.file.suffixes=.xml,.xsd,.xsl,.config
+  - sonar.yaml.file.suffixes=.yaml,.yml
+Project server settings:
+Project scanner properties:
+  - sonar.host.url=http://localhost:9000
+  - sonar.java.binaries=/home/admin123/java-workplace/java-springboot-microservices-ecommerce/config-server/target/classes,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/user-service/target/classes,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/register-server/target/classes
+  - sonar.java.libraries=/home/admin123/.m2/repository/org/springframework/cloud/spring-cloud-starter-netflix-eureka-server/5.0.0/spring-cloud-starter-netflix-eureka-server-5.0.0.jar,/home/admin123/.m2/repository/org/springframework/cloud/spring-cloud-starter/5.0.0/spring-cloud-starter-5.0.0.jar,/home/admin123/.m2/repository/org/springframework/cloud/spring-cloud-context/5.0.0/spring-cloud-context-5.0.0.jar,/home/admin123/.m2/repository/org/springframework/security/spring-security-crypto/7.0.3/spring-security-crypto-7.0.3.jar,/home/admin123/.m2/repository/org/springframework/cloud/spring-cloud-commons/5.0.0/spring-cloud-commons-5.0.0.jar,/home/admin123/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.81/bcprov-jdk18on-1.81.jar,/home/admin123/.m2/repository/org/springframework/cloud/spring-cloud-netflix-eureka-server/5.0.0/spring-cloud-netflix-eureka-server-5.0.0.jar,/home/admin123/.m2/repository/org/springframework/boot/spring-boot-starter-web/4.0.3/spring-boot-starter-web-4.0.3.jar,/home/admin123/.m2/repos...
+  - sonar.java.source=8
+  - sonar.login=******
+  - sonar.projectBaseDir=/home/admin123/java-workplace/java-springboot-microservices-ecommerce
+  - sonar.projectKey=SonarAnalyzer:java-springboot-microservices-ecommerce
+  - sonar.scanner.app=Intellij Sonar plugin
+  - sonar.scanner.appVersion=0.2.2
+  - sonar.sourceEncoding=UTF-8
+  - sonar.sources=/home/admin123/java-workplace/java-springboot-microservices-ecommerce/config-server/src/main/java,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/config-server/src/main/resources,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/config-server/target/generated-sources/annotations,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/user-service/src/main/java,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/user-service/src/main/resources,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/user-service/target/generated-sources/annotations,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/register-server/src/main/java,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/register-server/src/main/resources,/home/admin123/java-workplace/java-springboot-microservices-ecommerce/register-server/target/generated-sources/annotations
+  - sonar.tests=
+  - sonar.working.directory=/home/admin123/java-workplace/java-springboot-microservices-ecommerce/.idea/SonarAnalyzer/.scannerwork

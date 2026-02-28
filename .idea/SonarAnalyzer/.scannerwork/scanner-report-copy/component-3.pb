@@ -1,0 +1,1 @@
+ 2yamlXhr1config-server/src/main/resources/application.yaml
