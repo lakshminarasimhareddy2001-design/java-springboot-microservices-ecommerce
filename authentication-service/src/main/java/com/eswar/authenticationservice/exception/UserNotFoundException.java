@@ -1,6 +1,7 @@
 package com.eswar.authenticationservice.exception;
 
-import com.eswar.userservice.constants.ErrorMessages;
+import com.eswar.authenticationservice.constants.ErrorMessages;
+
 
 
 public class UserNotFoundException extends RuntimeException {

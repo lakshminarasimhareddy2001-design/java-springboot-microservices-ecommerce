@@ -2,6 +2,7 @@ package com.eswar.userservice.dto;
 import com.eswar.userservice.constants.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.util.Set;
@@ -20,6 +21,14 @@ public record UserRequestDto(
         @NotBlank(message = "Email is required")
         @Size(max = 150, message = "Email must be at most 150 characters")
         String email,
+
+        @NotBlank(message = "Password is required")
+        @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
+        @Pattern(
+                regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$",
+                message = "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character"
+        )
+        String password,
 
         @NotBlank(message = "Country code is required")
         @Size(max = 5, message = "Country code must be at most 5 characters")

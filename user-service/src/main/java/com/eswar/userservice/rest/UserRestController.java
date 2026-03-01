@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +26,9 @@ public class UserRestController {
 
     @PostMapping
     @Operation(summary = "Create a new user", description = "Creates a new user with roles and returns the created user")
-    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto request) {
-        UserResponseDto response = userService.createUser(request);
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto request,
+                                                      PasswordEncoder encoder) {
+        UserResponseDto response = userService.createUser(request,encoder);
         return ResponseEntity.ok(response);
     }
 

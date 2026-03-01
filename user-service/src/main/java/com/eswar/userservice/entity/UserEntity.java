@@ -74,6 +74,9 @@ public class UserEntity extends AbstractAuditingEntity {
     @Column(name = "last_seen")
     private Instant lastSeen;
 
+    @Column(name = "password")
+    String password;
+
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.LAZY)
     @CollectionTable(
             name = "user_roles",

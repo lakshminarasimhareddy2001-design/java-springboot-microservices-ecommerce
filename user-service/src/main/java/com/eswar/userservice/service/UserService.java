@@ -1,14 +1,15 @@
 package com.eswar.userservice.service;
 
 import com.eswar.userservice.constants.ErrorMessages;
+import com.eswar.userservice.dto.UserGrpcResponse;
 import com.eswar.userservice.dto.UserRequestDto;
 import com.eswar.userservice.dto.UserResponseDto;
 import com.eswar.userservice.entity.UserEntity;
 import com.eswar.userservice.exception.UserNotFoundException;
 import com.eswar.userservice.mapper.IUserMapper;
-import com.eswar.userservice.mapper.UserMapper;
 import com.eswar.userservice.repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,8 +24,13 @@ public class UserService {
     private final IUserMapper userMapper;
 
     // Create a new user
-    public UserResponseDto createUser(UserRequestDto request) {
+    public UserResponseDto createUser(UserRequestDto request,
+                                      PasswordEncoder encoder) {
         UserEntity entity = userMapper.toEntity(request);
+
+        String encodedPassword = encoder.encode(entity.getPassword());
+        entity.setPassword(encodedPassword);
+
         UserEntity saved = userRepository.save(entity);
         return userMapper.toResponse(saved);
     }
@@ -34,6 +40,13 @@ public class UserService {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id.toString() ));
         return userMapper.toResponse(entity);
+    }
+
+    // Get user by ID
+    public UserGrpcResponse getUserByGrpcUserId(UUID id) {
+        UserEntity entity = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id.toString() ));
+        return userMapper.toGrpcResponse(entity);
     }
 
     // Get user by Email
