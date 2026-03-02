@@ -129,26 +129,26 @@
 			<artifactId>mapstruct</artifactId>
 			<version>1.5.5.Final</version>
 		</dependency>
-		<!-- gRPC Spring Boot starter (CLIENT) -->
-		<dependency>
-			<groupId>net.devh</groupId>
-			<artifactId>grpc-client-spring-boot-starter</artifactId>
-			<version>3.0.0.RELEASE</version>
-		</dependency>
+<!--		&lt;!&ndash; gRPC Spring Boot starter (CLIENT) &ndash;&gt;-->
+<!--		<dependency>-->
+<!--			<groupId>net.devh</groupId>-->
+<!--			<artifactId>grpc-client-spring-boot-starter</artifactId>-->
+<!--			<version>3.0.0.RELEASE</version>-->
+<!--		</dependency>-->
 
 		<!-- protobuf -->
-		<dependency>
-			<groupId>com.google.protobuf</groupId>
-			<artifactId>protobuf-java</artifactId>
-			<version>3.25.3</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.google.protobuf</groupId>-->
+<!--			<artifactId>protobuf-java</artifactId>-->
+<!--			<version>3.25.3</version>-->
+<!--		</dependency>-->
 
-		<!-- stub -->
-		<dependency>
-			<groupId>io.grpc</groupId>
-			<artifactId>grpc-stub</artifactId>
-			<version>1.60.1</version>
-		</dependency>
+<!--		&lt;!&ndash; stub &ndash;&gt;-->
+<!--		<dependency>-->
+<!--			<groupId>io.grpc</groupId>-->
+<!--			<artifactId>grpc-stub</artifactId>-->
+<!--			<version>1.60.1</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>com.eswar</groupId>
 			<artifactId>grpc-contract</artifactId>

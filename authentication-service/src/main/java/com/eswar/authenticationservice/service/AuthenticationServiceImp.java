@@ -21,7 +21,7 @@ public class AuthenticationServiceImp implements IAuthenticationService {
     @Override
     public AuthenticationResponseDto login(LoginRequestDto request) {
 
-        if(request!=null && request.email() != null)
+        if(request==null && request.email() == null)
             throw new RuntimeException("Invalid Request");
 
         assert request != null;

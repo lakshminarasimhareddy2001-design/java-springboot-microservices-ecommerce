@@ -11,10 +11,10 @@ import com.eswar.userservice.repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +24,7 @@ public class UserService {
     private final IUserMapper userMapper;
 
     // Create a new user
+    @Transactional
     public UserResponseDto createUser(UserRequestDto request,
                                       PasswordEncoder encoder) {
         UserEntity entity = userMapper.toEntity(request);
@@ -36,6 +37,7 @@ public class UserService {
     }
 
     // Get user by ID
+    @Transactional(readOnly = true)
     public UserResponseDto getUserById(UUID id) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id.toString() ));
@@ -43,6 +45,7 @@ public class UserService {
     }
 
     // Get user by ID
+    @Transactional(readOnly = true)
     public UserGrpcResponse getUserByGrpcUserId(UUID id) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id.toString() ));
@@ -50,13 +53,22 @@ public class UserService {
     }
 
     // Get user by Email
+    @Transactional(readOnly = true)
     public UserResponseDto getUserByEmail(String email) {
         UserEntity entity = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
         return userMapper.toResponse(entity);
     }
 
+    @Transactional(readOnly = true)
+    public UserGrpcResponse getUserByGrpcUserEmail(String email) {
+        UserEntity entity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+        return userMapper.toGrpcResponse(entity);
+    }
+
     // Get all users
+    @Transactional(readOnly = true)
     public List<UserResponseDto> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(userMapper::toResponse)
@@ -85,6 +97,7 @@ public class UserService {
     }
 
     // Delete user
+    @Transactional
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException( id.toString() );
