@@ -13,6 +13,8 @@ public interface IProductMapper {
 
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "updatedAt")
+    @Mapping(target = "categoryId", source = "category.id")
+    @Mapping(target = "categoryName", source = "category.name")
     ProductResponseDto toResponse(ProductEntity product);
 
 }
