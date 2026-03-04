@@ -24,17 +24,19 @@
         <module name="authentication-service" />
         <module name="user-service" />
       </profile>
-      <profile name="Annotation profile for gateway-service" enabled="true">
+      <profile name="Annotation profile for payment-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
-        <module name="product-service" />
         <module name="payment-service" />
-        <module name="order-service" />
+        <module name="inventory-service" />
         <module name="gateway-service" />
+        <module name="product-service" />
+        <module name="swagger-service" />
+        <module name="order-service" />
         <module name="admin-service" />
       </profile>
     </annotationProcessing>
@@ -46,11 +48,13 @@
       <module name="authentication-service" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="gateway-service" options="-parameters" />
+      <module name="inventory-service" options="-parameters" />
       <module name="order-service" options="-parameters" />
       <module name="payment-service" options="-parameters" />
       <module name="product-service" options="-parameters" />
       <module name="register-server" options="-parameters" />
       <module name="rigister-server" options="-parameters" />
+      <module name="swagger-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
     </option>
   </component>

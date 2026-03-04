@@ -1,6 +1,6 @@
 spring:
   application:
-    name: payment-service
+    name: inventory-service
 
 
   devtools:
