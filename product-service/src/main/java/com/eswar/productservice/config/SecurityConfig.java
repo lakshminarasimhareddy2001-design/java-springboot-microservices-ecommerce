@@ -1,0 +1,62 @@
+package com.eswar.productservice.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    private static final String[] SWAGGER_WHITELIST = {
+            "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/v3/api-docs.yaml",
+            "/v3/api-docs"
+    };
+    private static final String[] ACTUATOR_WHITELIST = {
+            "/actuator/health",
+            "/actuator/info"
+    };
+
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity){
+
+
+
+        return  httpSecurity
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(
+                        request -> request
+
+
+                                .requestMatchers(
+                                        SWAGGER_WHITELIST
+                                ).permitAll()
+                                .requestMatchers(
+                                        ACTUATOR_WHITELIST
+                                ).permitAll()
+                                // Public product view
+                                .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+
+                                // Admin only
+                                .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasRole("ADMIN")
+
+                                .anyRequest().authenticated()
+                        
+
+                )
+                .build();
+
+
+    }
+}
