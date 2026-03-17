@@ -1,6 +1,7 @@
 package com.eswar.productservice.runner;
 
-import com.eswar.userservice.grpc.provider.GrpcUserService;
+
+import com.eswar.productservice.grpc.provider.ProductGrpcService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import jakarta.annotation.PreDestroy;
@@ -18,17 +19,17 @@ import java.util.Objects;
 public class GrpcServerRunner implements ApplicationRunner {
 
 
-private final GrpcUserService grpcUserService;
+private final ProductGrpcService productGrpcService;
 
  private  Server server=null;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         int port = args.containsOption("grpc.port") ?
-                Integer.parseInt(Objects.requireNonNull(args.getOptionValues("grpc.port")).getFirst()) : 9090;
+                Integer.parseInt(Objects.requireNonNull(args.getOptionValues("grpc.port")).getFirst()) : 9091;
 
     server   =  ServerBuilder.forPort(port)
-                .addService(grpcUserService)
+                .addService(productGrpcService)
                 .build()
                 .start();
 

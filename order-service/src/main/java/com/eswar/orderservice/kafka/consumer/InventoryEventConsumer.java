@@ -6,6 +6,7 @@ import com.eswar.orderservice.kafka.event.StockRejectedEvent;
 import com.eswar.orderservice.kafka.event.StockReservedEvent;
 import com.eswar.orderservice.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ public class InventoryEventConsumer {
     private final IOrderRepository orderRepository;
 
     @KafkaListener(topics = "stock-reserved", groupId = "order-group")
-    public void handleStockReserved(StockReservedEvent event){
+    public void handleStockReserved(@NonNull StockReservedEvent event){
 
         OrderEntity order = orderRepository.findById(event.orderId()).orElseThrow();
 
@@ -26,7 +27,7 @@ public class InventoryEventConsumer {
     }
 
     @KafkaListener(topics = "stock-rejected", groupId = "order-group")
-    public void handleStockRejected(StockRejectedEvent event){
+    public void handleStockRejected(@NonNull StockRejectedEvent event){
 
         OrderEntity order = orderRepository.findById(event.orderId()).orElseThrow();
 

@@ -7,6 +7,7 @@ import com.eswar.orderservice.dto.OrderResponseDto;
 import com.eswar.orderservice.entity.OrderEntity;
 import com.eswar.orderservice.entity.OrderedItemEntity;
 import com.eswar.orderservice.entity.OrderedItemId;
+import com.eswar.orderservice.grpc.client.GrpcProductServiceClient;
 import com.eswar.orderservice.kafka.event.OrderCreatedEvent;
 import com.eswar.orderservice.kafka.event.OrderItemEvent;
 import com.eswar.orderservice.kafka.producer.OrderEventProducer;
@@ -28,6 +29,7 @@ public class OrderServiceImp implements IOrderService{
     private final IOrderRepository orderRepository;
     private final IOrderMapper mapper;
     private final OrderEventProducer orderEventProducer;
+    private final GrpcProductServiceClient grpcProductServiceClient;
 
     @Override
     public OrderResponseDto createOrder(OrderDto dto) {
@@ -37,8 +39,16 @@ public class OrderServiceImp implements IOrderService{
         order.setStatus(OrderStatus.CREATED);
 
         List<OrderedItemEntity> items = new ArrayList<>();
-
+        BigDecimal totalAmount = BigDecimal.ZERO;
         for (OrderItemDto itemDto : dto.items()) {
+            // 🔥 CALL gRPC PRODUCT SERVICE
+            var product = grpcProductServiceClient.getProduct(itemDto.productId());
+
+            BigDecimal price = BigDecimal.valueOf(product.getPrice());
+
+            // Calculate total
+            BigDecimal itemTotal = price.multiply(BigDecimal.valueOf(itemDto.quantity()));
+            totalAmount = totalAmount.add(itemTotal);
 
             OrderedItemId id = new OrderedItemId();
             id.setOrder(order);
@@ -55,12 +65,11 @@ public class OrderServiceImp implements IOrderService{
 
         OrderEntity saved = orderRepository.save(order);
 
-        publishOrderCreatedEvent(saved);
+        publishOrderCreatedEvent(saved,totalAmount);
 
         return mapper.toResponse(saved);
     }
-
-    private void publishOrderCreatedEvent(OrderEntity order) {
+    private void publishOrderCreatedEvent(OrderEntity order, BigDecimal totalAmount) {
 
         List<OrderItemEvent> items = order.getItems().stream()
                 .map(i -> new OrderItemEvent(
@@ -73,7 +82,7 @@ public class OrderServiceImp implements IOrderService{
                 new OrderCreatedEvent(
                         order.getId(),
                         order.getCustomerId(),
-                        BigDecimal.ZERO, // optional calculation
+                        totalAmount, // ✅ now correct
                         items
                 );
 
