@@ -1,4 +1,4 @@
-package com.eswar.userservice.service;
+package com.eswar.userservice.grpc.provider;
 
 import com.eswar.grpc.user.UserEmailRequest;
 import com.eswar.grpc.user.UserIdRequest;
@@ -6,8 +6,8 @@ import com.eswar.grpc.user.UserResponse;
 import com.eswar.grpc.user.UserServiceGrpc;
 import com.eswar.userservice.constants.UserRole;
 import com.eswar.userservice.dto.UserGrpcResponse;
-import com.eswar.userservice.dto.UserResponseDto;
 import com.eswar.userservice.exception.UserNotFoundException;
+import com.eswar.userservice.service.IUserService;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

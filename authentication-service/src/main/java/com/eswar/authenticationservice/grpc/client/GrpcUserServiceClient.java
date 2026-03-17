@@ -1,4 +1,4 @@
-package com.eswar.authenticationservice.service;
+package com.eswar.authenticationservice.grpc.client;
 
 import com.eswar.grpc.user.UserEmailRequest;
 import com.eswar.grpc.user.UserResponse;
