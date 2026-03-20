@@ -1,4 +1,4 @@
-package com.eswar.productservice.config;
+package com.eswar.inventoryservice.config;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -26,7 +27,6 @@ public class SecurityConfig {
             "/actuator/health",
             "/actuator/info"
     };
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(@NonNull HttpSecurity httpSecurity){
@@ -47,15 +47,14 @@ public class SecurityConfig {
                                         ACTUATOR_WHITELIST
                                 ).permitAll()
                                 // Public product view
-                                .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/inventory").permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 // Admin only
-                                .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/v1/inventory").permitAll()
+
 
                                 .anyRequest().authenticated()
-                        
+
 
                 )
                 .build();

@@ -18,3 +18,8 @@ sonar  user: admin
            "CUSTOMER"
          ]
        }
+
+
+
+       user 973ceb03-d74e-4bea-a11c-c210449b6a02
+       product 86e94649-a525-448d-9a60-5c2b2d437cb0

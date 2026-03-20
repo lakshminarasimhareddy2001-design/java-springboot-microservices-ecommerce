@@ -8,12 +8,14 @@ import com.eswar.inventoryservice.kafka.event.OrderItem;
 import com.eswar.inventoryservice.mapper.IInventoryMapper;
 import com.eswar.inventoryservice.repository.IInventoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class InventoryServiceImp implements IInventoryService{
 
     private  final IInventoryRepository inventoryRepository;
@@ -23,9 +25,11 @@ public class InventoryServiceImp implements IInventoryService{
 
         for (OrderItem item : event.items()) {
 
-            InventoryEntity inventory =
-                    inventoryRepository.findById(item.productId())
-                            .orElseThrow();
+            InventoryEntity inventory = inventoryRepository.findById(item.productId()).orElse(null);
+            if (inventory == null) {
+                log.warn("Product {} not found in inventory", item.productId());
+                return false;
+            }
 
             if (inventory.getAvailableQuantity() < item.quantity()) {
                 return false;

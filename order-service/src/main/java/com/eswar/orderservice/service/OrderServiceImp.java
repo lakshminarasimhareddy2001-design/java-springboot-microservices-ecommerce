@@ -14,6 +14,7 @@ import com.eswar.orderservice.kafka.producer.OrderEventProducer;
 import com.eswar.orderservice.mapper.IOrderMapper;
 import com.eswar.orderservice.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -57,6 +58,8 @@ public class OrderServiceImp implements IOrderService{
             OrderedItemEntity item = new OrderedItemEntity();
             item.setId(id);
             item.setQuantity(itemDto.quantity());
+            item.setPrice(price);
+
 
             items.add(item);
         }
@@ -69,7 +72,7 @@ public class OrderServiceImp implements IOrderService{
 
         return mapper.toResponse(saved);
     }
-    private void publishOrderCreatedEvent(OrderEntity order, BigDecimal totalAmount) {
+    private void publishOrderCreatedEvent(@NonNull OrderEntity order, BigDecimal totalAmount) {
 
         List<OrderItemEvent> items = order.getItems().stream()
                 .map(i -> new OrderItemEvent(

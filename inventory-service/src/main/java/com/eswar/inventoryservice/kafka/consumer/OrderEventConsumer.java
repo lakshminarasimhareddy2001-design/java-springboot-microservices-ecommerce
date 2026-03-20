@@ -16,7 +16,7 @@ public class OrderEventConsumer {
     private final IInventoryService inventoryService;
     private final KafkaTemplate<String,Object> kafkaTemplate;
 
-    @KafkaListener(topics = "order-created")
+    @KafkaListener(topics = "order-created",groupId = "inventory-group")
     public void handleOrderCreated(OrderCreatedEvent event) {
 
         boolean reserved = inventoryService.reserveStock(event);

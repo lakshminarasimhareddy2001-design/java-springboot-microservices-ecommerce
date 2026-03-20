@@ -10,7 +10,6 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/inventory")
-@CrossOrigin("*")
 public class InventoryRestController {
 
     private final IInventoryService inventoryService;

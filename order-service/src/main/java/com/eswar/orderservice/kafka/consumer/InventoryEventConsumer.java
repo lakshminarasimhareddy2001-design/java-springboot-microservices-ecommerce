@@ -6,33 +6,57 @@ import com.eswar.orderservice.kafka.event.StockRejectedEvent;
 import com.eswar.orderservice.kafka.event.StockReservedEvent;
 import com.eswar.orderservice.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class InventoryEventConsumer {
 
     private final IOrderRepository orderRepository;
 
-    @KafkaListener(topics = "stock-reserved", groupId = "order-group")
-    public void handleStockReserved(@NonNull StockReservedEvent event){
+    @KafkaListener(
+            topics = "stock-reserved",
+            groupId = "order-group",
+            containerFactory = "stockReservedListenerFactory"
+    )
+    public void handleStockReserved(@NonNull StockReservedEvent sr) {
 
-        OrderEntity order = orderRepository.findById(event.orderId()).orElseThrow();
 
-        order.setStatus(OrderStatus.STOCK_RESERVED);
+        Optional<OrderEntity> optionalOrder = orderRepository.findById(sr.orderId());
+        if (optionalOrder.isPresent()) {
+            OrderEntity order = optionalOrder.get();
+            order.setStatus(OrderStatus.STOCK_RESERVED);
+            orderRepository.save(order);
+        } else {
+            log.warn("Order not found for id {}", sr.orderId());
+        }
 
-        orderRepository.save(order);
+
     }
 
-    @KafkaListener(topics = "stock-rejected", groupId = "order-group")
-    public void handleStockRejected(@NonNull StockRejectedEvent event){
+    @KafkaListener(
+            topics = "stock-rejected",
+            groupId = "order-group",
+            containerFactory = "stockRejectedListenerFactory"
+    )
+    public void handleStockRejected(@NonNull StockRejectedEvent sr) {
 
-        OrderEntity order = orderRepository.findById(event.orderId()).orElseThrow();
+        log.warn("rejected reason: {}",sr.reason());
+        Optional<OrderEntity> optionalOrder = orderRepository.findById(sr.orderId());
+        if (optionalOrder.isPresent()) {
+            OrderEntity order = optionalOrder.get();
+            order.setStatus(OrderStatus.STOCK_FAILED);
+            orderRepository.save(order);
+        } else {
+            log.warn("Order not found for id {}", sr.orderId());
+        }
 
-        order.setStatus(OrderStatus.STOCK_FAILED);
-
-        orderRepository.save(order);
     }
 }

@@ -8,10 +8,10 @@ import java.util.UUID;
 public record OrderResponseDto(
        UUID orderId,
 
-     UUID customerId,
+         UUID customerId,
 
          OrderStatus status,
 
-    List<OrderItemDto>items
+       List<OrderItemDto> items
 ) {
 }
