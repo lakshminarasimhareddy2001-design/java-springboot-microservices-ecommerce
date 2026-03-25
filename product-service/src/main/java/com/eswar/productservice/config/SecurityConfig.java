@@ -34,7 +34,7 @@ public class SecurityConfig {
 
 
         return  httpSecurity
-                .cors(Customizer.withDefaults())
+              .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         request -> request
@@ -49,6 +49,7 @@ public class SecurityConfig {
                                 // Public product view
                                 .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(HttpMethod.GET,"/api/v1/categories/**").permitAll()
                                 // Admin only
                                 .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasRole("ADMIN")

@@ -15,6 +15,7 @@ spring:
 
 logging:
   level:
+    org.springframework.web.cors: DEBUG
     org.springframework.cloud.gateway: TRACE
     org.springframework.cloud.gateway.route: DEBUG
     org.springframework.cloud.netflix.eureka: DEBUG

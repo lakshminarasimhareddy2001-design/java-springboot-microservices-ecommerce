@@ -1,5 +1,6 @@
 package com.eswar.gatewayservice.runner;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.cloud.gateway.route.RouteDefinition;
@@ -12,13 +13,12 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class CustomRouteLocator implements RouteDefinitionLocator {
 
     private final Environment environment;
 
-    public CustomRouteLocator(Environment environment) {
-        this.environment = environment;
-    }
+
 
     @Override
     public Flux<RouteDefinition> getRouteDefinitions() {

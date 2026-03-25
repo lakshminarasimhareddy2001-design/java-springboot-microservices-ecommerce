@@ -65,7 +65,7 @@ log.warn("grpc error from getUserByEmail",ex);
 
         Set<String> roles = new HashSet<>(user.getRolesList());
 
-        String accessToken = jwtService.generateAccessToken(user.getEmail(), roles);
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), roles);
         String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
         return new AuthenticationResponseDto(
@@ -116,7 +116,7 @@ log.warn("grpc error from getUserByEmail",ex);
 
         Set<String> roles = new HashSet<>(user.getRolesList());
 
-        String accessToken = jwtService.generateAccessToken(user.getEmail(), roles);
+        String accessToken = jwtService.generateAccessToken(user.getId(),user.getEmail(), roles);
 
         return new AccessTokenResponseDto(
                 accessToken,

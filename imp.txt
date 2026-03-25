@@ -20,6 +20,25 @@ sonar  user: admin
        }
 
 
+  "id": "daa45d6c-4b5e-4ad6-aee3-9cb94ae747be",
+  "firstName": "Lakshmi Narasimha Reddy",
+  "lastName": "Pittu",
+  "email": "lnreddyreddy405@gmail.com",
+  "countryCode": "+91",
+  "phoneNumber": "9381433910",
+  "addressStreet": "string",
+  "addressCity": "string",
+  "addressCountry": "string",
+  "addressZipCode": "string",
+  "roles": [
+    "ADMIN"
+  ],
+  "createdAt": "2026-03-25T07:02:09.693379023Z",
+  "updatedAt": "2026-03-25T07:02:09.693379023Z",
+  "lastSeen": null
+}
+
+
 
        user 973ceb03-d74e-4bea-a11c-c210449b6a02
        product 86e94649-a525-448d-9a60-5c2b2d437cb0

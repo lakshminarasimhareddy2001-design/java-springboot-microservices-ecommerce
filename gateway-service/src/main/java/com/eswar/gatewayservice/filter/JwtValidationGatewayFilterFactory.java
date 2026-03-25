@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component("JwtValidation")
 public class JwtValidationGatewayFilterFactory
+
         extends AbstractGatewayFilterFactory<JwtValidationGatewayFilterFactory.Config> {
 
     public JwtValidationGatewayFilterFactory() {

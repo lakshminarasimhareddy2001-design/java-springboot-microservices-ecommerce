@@ -28,11 +28,12 @@ public class JwtService {
     @Value("${jwt.refresh.expiration}")
     private long refreshExpiration;
 
-    public String generateAccessToken(String email,
+    public String generateAccessToken(String userId,String email,
                                       Set<String> roles) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("email",email);
         claims.put("roles", roles);
-        return buildToken(email, accessExpiration,
+        return buildToken(userId, accessExpiration,
                       claims
         );
     }
