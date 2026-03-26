@@ -34,7 +34,7 @@ public class SecurityConfig {
 
 
         return  httpSecurity
-                .cors(Customizer.withDefaults())
+                .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         request -> request

@@ -1,15 +1,16 @@
-package com.eswar.orderservice.config;
+package com.eswar.userservice.config;
 
+import com.eswar.userservice.filter.HeaderAuthenticationFilter;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -28,13 +29,14 @@ public class SecurityConfig {
             "/actuator/info"
     };
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(@NonNull HttpSecurity httpSecurity){
 
 
 
         return  httpSecurity
-                .cors(AbstractHttpConfigurer::disable)
+              .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         request -> request
@@ -47,16 +49,15 @@ public class SecurityConfig {
                                         ACTUATOR_WHITELIST
                                 ).permitAll()
                                 // Public product view
-                                .requestMatchers(HttpMethod.POST, "/api/v1/orders").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/users/**").permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                // Admin only
-
-
-
+                                .requestMatchers(HttpMethod.GET,"/api/v1/users/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
-
+                        
 
                 )
+                .addFilterBefore(new HeaderAuthenticationFilter(),
+                        UsernamePasswordAuthenticationFilter.class)
                 .build();
 
 

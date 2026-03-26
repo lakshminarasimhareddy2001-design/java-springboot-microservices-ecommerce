@@ -1,5 +1,6 @@
-package com.eswar.authenticationservice.security;
+package com.eswar.authenticationservice.filters;
 
+import com.eswar.authenticationservice.security.GrpcUserDetailsService;
 import com.eswar.authenticationservice.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

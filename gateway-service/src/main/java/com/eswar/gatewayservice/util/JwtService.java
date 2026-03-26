@@ -1,22 +1,22 @@
-package com.eswar.authenticationservice.service;
+package com.eswar.gatewayservice.util;
+
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class JwtService {
 
     @Value("${jwt.secret}")
@@ -28,48 +28,34 @@ public class JwtService {
     @Value("${jwt.refresh.expiration}")
     private long refreshExpiration;
 
-    public String generateAccessToken(String userId,String email,
-                                      Set<String> roles) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("email",email);
-        claims.put("roles", roles);
-        return buildToken(userId, accessExpiration,
-                      claims
-        );
-    }
-
-    public String generateRefreshToken(String email) {
-        Map<String, Object> claims = new HashMap<>();
-        return buildToken(email, refreshExpiration,
-                       claims
-        );
-    }
-
-    private String buildToken(String subject, long expiration,Map<String,Object> claims) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSignKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
 
     public boolean isTokenValid(String token) {
         try {
             extractAllClaims(token);
             return !isTokenExpired(token);
         } catch (Exception e) {
+            log.error("JWT validation failed: {}", e.getMessage(), e);
             return false;
         }
     }
-
-    public String extractUsername(String token) {
+    public String extractUserId(String token) {
 
         return extractAllClaims(token).getSubject();
     }
+    public String extractUserEmail(String token) {
+
+        return extractAllClaims(token).get("email",String.class);
+    }
+
+    public List<String> extractUserRoles(String token) {
+            Claims claims=extractAllClaims(token);
+        return ((List<?>)claims.get("roles",List.class)).stream().map(Object::toString).toList();
+    }
+
+
 
     private boolean isTokenExpired(String token) {
+
         return extractExpiration(token).before(new Date());
     }
 

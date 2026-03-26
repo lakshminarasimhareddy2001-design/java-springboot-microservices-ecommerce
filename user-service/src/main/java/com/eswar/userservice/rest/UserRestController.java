@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +36,7 @@ public class UserRestController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id.toString() == authentication.name")
     @Operation(summary = "Get a user by ID", description = "Fetches a single user by UUID",security = @SecurityRequirement( name="JWT"))
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
         UserResponseDto response = userService.getUserById(id);
@@ -42,12 +44,14 @@ public class UserRestController {
     }
 
     @GetMapping("/by-email")
+    @PreAuthorize("hasRole('ADMIN') or #email == authentication.details")
     @Operation(summary = "Get user by email", description = "Fetch a user by their email address",security = @SecurityRequirement( name="JWT"))
     public ResponseEntity<UserResponseDto> getUserByEmail(@RequestParam String email) {
         return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
     @GetMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all users", description = "Fetches all users in the system",security = @SecurityRequirement( name="JWT"))
     public ResponseEntity<PageResponse<UserResponseDto>> getAllUsers(Pageable pageable) {
 
@@ -56,6 +60,7 @@ public class UserRestController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id.toString() == authentication.name")
     @Operation(summary = "Update an existing user", description = "Updates a user by UUID and returns updated data",security = @SecurityRequirement( name="JWT"))
     public ResponseEntity<UserResponseDto> updateUser(
             @PathVariable UUID id,
@@ -65,6 +70,7 @@ public class UserRestController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id.toString() == authentication.name")
     @Operation(summary = "Delete a user", description = "Deletes a user by UUID")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);

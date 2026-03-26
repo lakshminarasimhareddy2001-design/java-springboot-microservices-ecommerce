@@ -1,5 +1,5 @@
 package com.eswar.authenticationservice.security;
-import  com.eswar.authenticationservice.security.JwtAuthenticationFilter;
+import com.eswar.authenticationservice.filters.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +36,7 @@ public class AuthenticationSecurity {
 
 
      return  httpSecurity
+             .cors(AbstractHttpConfigurer::disable)
              .csrf(AbstractHttpConfigurer::disable)
              .authorizeHttpRequests(
                            request -> request
