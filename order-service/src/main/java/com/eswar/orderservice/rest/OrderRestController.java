@@ -2,6 +2,7 @@ package com.eswar.orderservice.rest;
 
 import com.eswar.orderservice.dto.OrderDto;
 import com.eswar.orderservice.dto.OrderResponseDto;
+import com.eswar.orderservice.dto.PageResponse;
 import com.eswar.orderservice.service.IOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -29,17 +30,21 @@ public class OrderRestController {
     // ✅ ADMIN only
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<OrderResponseDto>> getAllOrders(Pageable pageable) {
+    public ResponseEntity<PageResponse<OrderResponseDto>> getAllOrders(Pageable pageable) {
         return ResponseEntity.ok(orderService.getALlOrders(pageable));
     }
 
-//    // ✅ USER sees only their orders
-//    @GetMapping("/my")
-//    @PreAuthorize("hasRole('USER')")
-//    public ResponseEntity<List<OrderResponseDto>> getMyOrders(Principal principal) {
-//
-//        String userId = principal.getName();
-//
-//        return ResponseEntity.ok(orderService.getOrderById(userId));
-//    }
+    // ✅ USER sees only their orders
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PageResponse<OrderResponseDto>> getMyOrders(Principal principal,Pageable pageable) {
+
+        String userId = principal.getName();
+
+        return ResponseEntity.ok(orderService.getOrdersByCustomerId(userId,pageable));
+    }
+
+
+
+
 }

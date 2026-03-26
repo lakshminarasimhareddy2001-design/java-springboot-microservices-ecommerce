@@ -27,6 +27,7 @@ public class OrderEntity extends AbstractAuditingEntity {
     @Column(name = "customer_id", nullable = false)
     private UUID customerId;
 
+    //status of this order
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
@@ -35,6 +36,7 @@ public class OrderEntity extends AbstractAuditingEntity {
     @Column(name = "payment_reference")
     private String paymentReference;
 
+    //items to order right now
     @OneToMany(mappedBy = "id.order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderedItemEntity> items = new ArrayList<>();
 

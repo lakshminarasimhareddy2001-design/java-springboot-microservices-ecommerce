@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 @Builder
 public class OrderedItemEntity {
 
+    //make order and product primary
     @EmbeddedId
     private OrderedItemId id;
 
