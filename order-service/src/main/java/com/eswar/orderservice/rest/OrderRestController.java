@@ -5,6 +5,7 @@ import com.eswar.orderservice.dto.OrderResponseDto;
 import com.eswar.orderservice.dto.PageResponse;
 import com.eswar.orderservice.service.IOrderService;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,14 +31,14 @@ public class OrderRestController {
     // ✅ ADMIN only
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PageResponse<OrderResponseDto>> getAllOrders(Pageable pageable) {
+    public ResponseEntity<PageResponse<OrderResponseDto>> getAllOrders(@ParameterObject Pageable pageable) {
         return ResponseEntity.ok(orderService.getALlOrders(pageable));
     }
 
     // ✅ USER sees only their orders
     @GetMapping("/my")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<PageResponse<OrderResponseDto>> getMyOrders(Principal principal,Pageable pageable) {
+    public ResponseEntity<PageResponse<OrderResponseDto>> getMyOrders(Principal principal,@ParameterObject Pageable pageable) {
 
         String userId = principal.getName();
 
@@ -45,6 +46,20 @@ public class OrderRestController {
     }
 
 
+    // ✅ ADMIN can update order
+    @PutMapping("/{orderId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<OrderResponseDto> updateOrder(@PathVariable String orderId,
+                                                        @RequestBody OrderDto dto) {
+        return ResponseEntity.ok(orderService.updateOrder(orderId, dto));
+    }
 
+    // ✅ ADMIN or owner can cancel
+    @DeleteMapping("/{orderId}")
+    @PreAuthorize("hasRole('ADMIN') or @orderSecurity.isOwner(#orderId, authentication.name)")
+    public ResponseEntity<Void> cancelOrder(@PathVariable String orderId) {
+        orderService.cancelOrder(orderId);
+        return ResponseEntity.noContent().build();
+    }
 
 }

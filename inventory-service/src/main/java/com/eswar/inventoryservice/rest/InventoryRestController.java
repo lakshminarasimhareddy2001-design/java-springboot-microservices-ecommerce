@@ -23,4 +23,7 @@ public class InventoryRestController {
     public InventoryDto getInventory(@PathVariable UUID productId) {
         return inventoryService.getInventory(productId);
     }
+
+
+
 }

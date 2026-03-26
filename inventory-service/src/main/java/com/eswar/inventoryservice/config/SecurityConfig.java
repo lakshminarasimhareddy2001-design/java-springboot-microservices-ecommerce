@@ -49,12 +49,9 @@ public class SecurityConfig {
                                         ACTUATOR_WHITELIST
                                 ).permitAll()
                                 // Public product view
-                                .requestMatchers(HttpMethod.GET, "/api/v1/inventory").permitAll()
+                                .requestMatchers( "/api/v1/inventory").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 // Admin only
-                                .requestMatchers(HttpMethod.POST, "/api/v1/inventory").permitAll()
-
-
                                 .anyRequest().authenticated()
 
 

@@ -1,6 +1,7 @@
 package com.eswar.inventoryservice.service;
 
 import com.eswar.inventoryservice.dto.InventoryDto;
+import com.eswar.inventoryservice.dto.PageResponse;
 import com.eswar.inventoryservice.entity.InventoryEntity;
 import com.eswar.inventoryservice.exception.InventoryNotFoundException;
 import com.eswar.inventoryservice.kafka.event.OrderCreatedEvent;
@@ -9,8 +10,12 @@ import com.eswar.inventoryservice.mapper.IInventoryMapper;
 import com.eswar.inventoryservice.repository.IInventoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -56,7 +61,7 @@ public class InventoryServiceImp implements IInventoryService{
         return true;
     }
 
-
+@Transactional
     public InventoryDto createInventory(InventoryDto dto) {
 
         InventoryEntity entity = inventoryMapper.toEntity(dto);
@@ -66,6 +71,7 @@ public class InventoryServiceImp implements IInventoryService{
         return inventoryMapper.toDto(saved);
     }
 
+    @Transactional(readOnly = true)
     public InventoryDto getInventory(UUID productId) {
 
         InventoryEntity entity = inventoryRepository
@@ -74,4 +80,25 @@ public class InventoryServiceImp implements IInventoryService{
 
         return inventoryMapper.toDto(entity);
     }
+
+    @Transactional(readOnly = true)
+    @Override
+    public PageResponse<InventoryDto> getAllInventories(Pageable pageable) {
+
+        Page<InventoryEntity> page =inventoryRepository.findAll(pageable);
+
+        List<InventoryDto> content=page.getContent().stream().map(inventoryMapper::toDto).toList();
+
+        return new PageResponse<>(
+                content,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isLast()
+        );
+    }
+
+
+
 }
