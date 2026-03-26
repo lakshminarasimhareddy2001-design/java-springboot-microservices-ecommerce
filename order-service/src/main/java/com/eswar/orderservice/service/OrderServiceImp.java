@@ -7,6 +7,8 @@ import com.eswar.orderservice.dto.OrderResponseDto;
 import com.eswar.orderservice.entity.OrderEntity;
 import com.eswar.orderservice.entity.OrderedItemEntity;
 import com.eswar.orderservice.entity.OrderedItemId;
+import com.eswar.orderservice.exceptions.InvalidUserIdException;
+import com.eswar.orderservice.exceptions.OrderNotFoundException;
 import com.eswar.orderservice.grpc.client.GrpcProductServiceClient;
 import com.eswar.orderservice.kafka.event.OrderCreatedEvent;
 import com.eswar.orderservice.kafka.event.OrderItemEvent;
@@ -15,13 +17,13 @@ import com.eswar.orderservice.mapper.IOrderMapper;
 import com.eswar.orderservice.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.security.Principal;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -33,14 +35,19 @@ public class OrderServiceImp implements IOrderService{
     private final GrpcProductServiceClient grpcProductServiceClient;
 
     @Override
-    public OrderResponseDto createOrder(OrderDto dto) {
+    @Transactional
+    public OrderResponseDto createOrder(OrderDto dto, Principal principal) {
 
+        //getting entity
         OrderEntity order = mapper.toEntity(dto);
-
+        //set status
         order.setStatus(OrderStatus.CREATED);
 
+
         List<OrderedItemEntity> items = new ArrayList<>();
+
         BigDecimal totalAmount = BigDecimal.ZERO;
+
         for (OrderItemDto itemDto : dto.items()) {
             // 🔥 CALL gRPC PRODUCT SERVICE
             var product = grpcProductServiceClient.getProduct(itemDto.productId());
@@ -65,6 +72,11 @@ public class OrderServiceImp implements IOrderService{
         }
 
         order.setItems(items);
+        try {
+            order.setCustomerId(UUID.fromString(principal.getName()));
+        } catch (Exception e) {
+            throw new InvalidUserIdException("Invalid userId in token");
+        }
 
         OrderEntity saved = orderRepository.save(order);
 
@@ -72,6 +84,42 @@ public class OrderServiceImp implements IOrderService{
 
         return mapper.toResponse(saved);
     }
+
+    @Override
+    public List<OrderResponseDto> getALlOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable).stream().map(mapper::toResponse).toList();
+    }
+
+    @Override
+    public OrderResponseDto getOrderById(String orderId) {
+        UUID id;
+        try {
+            id = UUID.fromString(orderId);
+        } catch (Exception e) {
+            throw new OrderNotFoundException("INVALID_ORDER_ID ,Order ID is not valid UUID");
+        }
+
+        OrderEntity order = orderRepository.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException("ORDER_NOT_FOUND, Order not found"));
+
+        return mapper.toResponse(order);
+    }
+
+    @Override
+    public OrderResponseDto updateOrder(String orderId, OrderDto orderDto) {
+        return null;
+    }
+
+    @Override
+    public void cancelOrder(String orderId) {
+
+    }
+
+    @Override
+    public boolean isOrderOwnedByUser(String orderId, String userId) {
+        return false;
+    }
+
     private void publishOrderCreatedEvent(@NonNull OrderEntity order, BigDecimal totalAmount) {
 
         List<OrderItemEvent> items = order.getItems().stream()

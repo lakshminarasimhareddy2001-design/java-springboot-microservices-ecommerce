@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -53,7 +54,7 @@ public class UserRestController {
     @GetMapping()
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all users", description = "Fetches all users in the system",security = @SecurityRequirement( name="JWT"))
-    public ResponseEntity<PageResponse<UserResponseDto>> getAllUsers(Pageable pageable) {
+    public ResponseEntity<PageResponse<UserResponseDto>> getAllUsers( @ParameterObject Pageable pageable) {
 
         PageResponse<UserResponseDto> users = userService.getAllUsers(pageable);
         return ResponseEntity.ok(users);

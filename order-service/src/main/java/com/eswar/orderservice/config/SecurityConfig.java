@@ -1,5 +1,6 @@
 package com.eswar.orderservice.config;
 
+import com.eswar.orderservice.filter.HeaderAuthenticationFilter;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -46,6 +48,7 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         ACTUATOR_WHITELIST
                                 ).permitAll()
+                                .requestMatchers("/docs/**", "/css/**", "/js/**").permitAll()
                                 // Public product view
                                 .requestMatchers(HttpMethod.POST, "/api/v1/orders").permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -56,7 +59,9 @@ public class SecurityConfig {
                                 .anyRequest().authenticated()
 
 
-                )
+                ).formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .addFilterBefore(new HeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
 
 

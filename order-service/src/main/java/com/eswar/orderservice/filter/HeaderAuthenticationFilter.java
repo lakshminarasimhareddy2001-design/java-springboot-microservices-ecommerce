@@ -1,4 +1,4 @@
-package com.eswar.productservice.filter;
+package com.eswar.orderservice.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

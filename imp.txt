@@ -42,3 +42,15 @@ sonar  user: admin
 
        user 973ceb03-d74e-4bea-a11c-c210449b6a02
        product 86e94649-a525-448d-9a60-5c2b2d437cb0
+
+       {
+         "access_token": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJBRE1JTiJdLCJlbWFpbCI6ImxucmVkZHlyZWRkeTQwNUBnbWFpbC5jb20iLCJzdWIiOiJkYWE0NWQ2Yy00YjVlLTRhZDYtYWVlMy05Y2I5NGFlNzQ3YmUiLCJpYXQiOjE3NzQ1MTE3NzQsImV4cCI6MTc3NDUxMjY3NH0.zZ2rntJwyLBJKSWgEy5-W1u0nfpLIDVwwMcDL1BCiWw",
+         "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJsbnJlZGR5cmVkZHk0MDVAZ21haWwuY29tIiwiaWF0IjoxNzc0NTExNzc0LCJleHAiOjE3NzUxMTY1NzR9.PryfEdnCSleovUUOsZbbniqy8fhP9176TsFA6L7Shwc",
+         "token_type": "JWT",
+         "expires_in": 900,
+         "issued_at": "2026-03-26T07:56:14.740004740Z",
+         "username": "lnreddyreddy405@gmail.com",
+         "roles": [
+           "ADMIN"
+         ]
+       }
