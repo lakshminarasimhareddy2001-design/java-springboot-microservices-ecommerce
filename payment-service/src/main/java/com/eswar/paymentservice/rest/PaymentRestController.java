@@ -8,6 +8,7 @@ import com.eswar.paymentservice.dto.PaymentVerifyRequest;
 import com.eswar.paymentservice.service.IPaymentService;
 import com.razorpay.RazorpayException;
 import lombok.RequiredArgsConstructor;
+import org.json.JSONObject;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.UUID;
+
+import static com.razorpay.Utils.verifyWebhookSignature;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -79,5 +82,16 @@ public class PaymentRestController {
             @RequestParam PaymentStatus status) {
 
         return ResponseEntity.ok(paymentService.updatePaymentStatus(paymentId, status));
+    }
+
+
+
+    @PostMapping("/webhook")
+    public ResponseEntity<String> handleWebhook(
+            @RequestBody String payload,
+            @RequestHeader("X-Razorpay-Signature") String signature
+    ) {
+        paymentService.handleWebhook(payload, signature);
+        return ResponseEntity.ok("OK");
     }
 }

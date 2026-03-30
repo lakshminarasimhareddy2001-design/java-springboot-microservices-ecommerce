@@ -1,5 +1,6 @@
 package com.eswar.authenticationservice;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -10,6 +11,13 @@ import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.MapPropertySource;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 @SpringBootApplication
 @EnableDiscoveryClient
@@ -39,7 +47,22 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 public class AuthenticationServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AuthenticationServiceApplication.class, args);
+		SpringApplication app = new SpringApplication(AuthenticationServiceApplication.class);
+
+		// Load .env and inject into Spring Environment
+		app.addInitializers( ctx -> {
+			Dotenv dotenv = Dotenv.load();
+
+			Map<String, Object> properties = new HashMap<>();
+			properties.put("SECRET", Objects.requireNonNull(dotenv.get("SECRET")));
+
+			// Add as first property source so it overrides defaults
+			ctx.getEnvironment()
+					.getPropertySources()
+					.addFirst(new MapPropertySource("dotenvProperties", properties));
+		});
+
+		app.run(args);
 	}
 
 }

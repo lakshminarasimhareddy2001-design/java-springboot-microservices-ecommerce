@@ -27,5 +27,6 @@ public interface IPaymentService {
     PaymentResponse getPaymentById(UUID paymentId);
 
     PaymentResponse updatePaymentStatus(UUID paymentId, PaymentStatus status);
+    void handleWebhook(String payload, String signature);
 
 }

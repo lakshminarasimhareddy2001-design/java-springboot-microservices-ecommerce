@@ -29,6 +29,10 @@ public class AuthenticationSecurity {
             "/actuator/info"
     };
 
+    private static final String[] STATIC_DOC={
+            "/docs/**", "/css/**", "/js/**"
+    };
+
 
      @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity){
@@ -49,12 +53,16 @@ public class AuthenticationSecurity {
                                            ACTUATOR_WHITELIST
                                    ).permitAll()
                                    .requestMatchers(
+                                           STATIC_DOC
+                                   ).permitAll()
+                                   .requestMatchers(
                                           "/api/v1/auth/login",
                                             "/api/v1/auth/refresh"
                                    ).permitAll()
                                    .anyRequest().authenticated()
 
-                   )
+                   ).httpBasic(AbstractHttpConfigurer::disable)
+             .formLogin(AbstractHttpConfigurer::disable)
              .addFilterBefore(jwtAuthenticationFilter,
                               UsernamePasswordAuthenticationFilter.class)
              .build();

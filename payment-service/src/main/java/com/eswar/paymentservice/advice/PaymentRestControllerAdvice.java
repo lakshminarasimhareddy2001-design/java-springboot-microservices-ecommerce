@@ -1,14 +1,13 @@
 package com.eswar.paymentservice.advice;
 
 import com.eswar.paymentservice.exception.BusinessException;
+import com.eswar.paymentservice.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.net.URI;
 import java.time.Instant;
 
 @RestControllerAdvice
@@ -16,41 +15,31 @@ import java.time.Instant;
 public class PaymentRestControllerAdvice {
 
     @ExceptionHandler(BusinessException.class)
-    public ProblemDetail handleBusiness(BusinessException ex, HttpServletRequest request) {
+    public ProblemDetail handleBusiness(BusinessException ex) {
+        log.warn("Error from Business handler: ",ex);
+        ProblemDetail problem = ProblemDetail.forStatus(ex.getStatus());
 
-        log.warn("Business exception occurred: {} - {}", ex.getErrorCode(), ex.getMessage());
-
-        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problem.setTitle("Business Error");
         problem.setDetail(ex.getMessage());
-
-        // Build base URL dynamically
-        String baseUrl = request.getScheme() + "://" + request.getServerName()
-                + ":" + request.getServerPort();
-
-        // Link to static error documentation page
-        problem.setType(URI.create(baseUrl + "/docs/errors/" + ex.getErrorCode() + ".html"));
-
-        problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", ex.getErrorCode());
+        problem.setProperty("timestamp", Instant.now());
 
         return problem;
     }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneric(Exception ex, HttpServletRequest request) {
 
         log.error("Unhandled exception occurred", ex);
 
-        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        ProblemDetail problem = ProblemDetail.forStatus(
+                ErrorCode.INTERNAL_ERROR.getStatus()
+        );
+
         problem.setTitle("Internal Server Error");
-        problem.setDetail("An unexpected error occurred. Please contact support.");
-
-        String baseUrl = request.getScheme() + "://" + request.getServerName()
-                + ":" + request.getServerPort();
-
-        problem.setType(URI.create(baseUrl + "/docs/errors/GENERIC_ERROR.html"));
+        problem.setDetail(ErrorCode.INTERNAL_ERROR.getMessage());
+        problem.setProperty("errorCode", ErrorCode.INTERNAL_ERROR.name());
         problem.setProperty("timestamp", Instant.now());
-        problem.setProperty("exception", ex.getClass().getSimpleName());
 
         return problem;
     }

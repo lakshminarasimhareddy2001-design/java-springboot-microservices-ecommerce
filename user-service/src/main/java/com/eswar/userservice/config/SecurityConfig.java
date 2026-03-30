@@ -28,7 +28,9 @@ public class SecurityConfig {
             "/actuator/health",
             "/actuator/info"
     };
-
+    private static final String[] STATIC_DOC={
+            "/docs/**", "/css/**", "/js/**"
+    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(@NonNull HttpSecurity httpSecurity){
@@ -47,6 +49,9 @@ public class SecurityConfig {
                                 ).permitAll()
                                 .requestMatchers(
                                         ACTUATOR_WHITELIST
+                                ).permitAll()
+                                .requestMatchers(
+                                        STATIC_DOC
                                 ).permitAll()
                                 // Public product view
                                 .requestMatchers(HttpMethod.POST, "/api/v1/users/**").permitAll()

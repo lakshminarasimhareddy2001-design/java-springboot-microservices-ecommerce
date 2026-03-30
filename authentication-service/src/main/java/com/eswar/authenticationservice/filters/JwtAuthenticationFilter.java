@@ -38,7 +38,8 @@ log.info("JwtAuthentication filter is running... {}",request.getRequestURI() );
         try {
             String token = getJwtFromRequest(request);
 
-            if (token != null && jwtTokenProvider.isTokenValid(token)) {
+            if (token != null ) {
+                jwtTokenProvider.validateToken(token);
                 String username = jwtTokenProvider.extractUsername(token);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);

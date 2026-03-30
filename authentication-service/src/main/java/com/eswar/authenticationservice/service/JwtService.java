@@ -1,5 +1,7 @@
 package com.eswar.authenticationservice.service;
 
+import com.eswar.authenticationservice.exception.BusinessException;
+import com.eswar.authenticationservice.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -55,22 +57,14 @@ public class JwtService {
                 .compact();
     }
 
-    public boolean isTokenValid(String token) {
-        try {
-            extractAllClaims(token);
-            return !isTokenExpired(token);
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
     public String extractUsername(String token) {
-
         return extractAllClaims(token).getSubject();
     }
 
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        return
+                extractExpiration(token).before(new Date());
     }
 
     private Date extractExpiration(String token) {
@@ -88,5 +82,28 @@ public class JwtService {
     private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public void validateToken(String token) {
+
+        try {
+            extractAllClaims(token);
+
+            if (isTokenExpired(token)) {
+                throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+            }
+
+        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+
+        } catch (io.jsonwebtoken.MalformedJwtException ex) {
+            throw new BusinessException(ErrorCode.TOKEN_MALFORMED);
+
+        } catch (io.jsonwebtoken.SignatureException ex) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+
+        } catch (Exception ex) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
     }
 }

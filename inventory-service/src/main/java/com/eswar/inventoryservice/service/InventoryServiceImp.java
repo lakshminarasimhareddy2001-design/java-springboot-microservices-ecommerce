@@ -10,12 +10,14 @@ import com.eswar.inventoryservice.mapper.IInventoryMapper;
 import com.eswar.inventoryservice.repository.IInventoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -26,7 +28,7 @@ public class InventoryServiceImp implements IInventoryService{
     private  final IInventoryRepository inventoryRepository;
     private final IInventoryMapper  inventoryMapper;
 
-    public boolean reserveStock(OrderCreatedEvent event) {
+    public boolean reserveStock(@NonNull OrderCreatedEvent event) {
 
         for (OrderItem item : event.items()) {
 
@@ -51,8 +53,10 @@ public class InventoryServiceImp implements IInventoryService{
                     inventory.getAvailableQuantity() - item.quantity()
             );
 
+            int reserved = Optional.ofNullable(inventory.getReservedQuantity()).orElse(0);
+
             inventory.setReservedQuantity(
-                    inventory.getReservedQuantity() + item.quantity()
+                    reserved + item.quantity()
             );
 
             inventoryRepository.save(inventory);

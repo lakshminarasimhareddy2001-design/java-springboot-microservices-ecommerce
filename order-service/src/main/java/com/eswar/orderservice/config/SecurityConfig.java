@@ -53,9 +53,6 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/orders").permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 // Admin only
-
-
-
                                 .anyRequest().authenticated()
 
 

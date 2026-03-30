@@ -1,6 +1,8 @@
-package com.eswar.gatewayservice.util;
+package com.eswar.gatewayservice.service;
 
 
+import com.eswar.gatewayservice.exceptions.BusinessException;
+import com.eswar.gatewayservice.exceptions.ErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -29,13 +31,26 @@ public class JwtService {
     private long refreshExpiration;
 
 
-    public boolean isTokenValid(String token) {
+    public void validateToken(String token) {
+
         try {
             extractAllClaims(token);
-            return !isTokenExpired(token);
-        } catch (Exception e) {
-            log.error("JWT validation failed: {}", e.getMessage(), e);
-            return false;
+
+            if (isTokenExpired(token)) {
+                throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+            }
+
+        } catch (io.jsonwebtoken.ExpiredJwtException ex) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+
+        } catch (io.jsonwebtoken.MalformedJwtException ex) {
+            throw new BusinessException(ErrorCode.TOKEN_MALFORMED);
+
+        } catch (io.jsonwebtoken.SignatureException ex) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+
+        } catch (Exception ex) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
     }
     public String extractUserId(String token) {

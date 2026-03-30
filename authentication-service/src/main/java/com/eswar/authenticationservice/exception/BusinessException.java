@@ -1,4 +1,4 @@
-package com.eswar.paymentservice.exception;
+package com.eswar.authenticationservice.exception;
 
 import org.springframework.http.HttpStatus;
 

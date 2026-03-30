@@ -1,6 +1,7 @@
 package com.eswar.authenticationservice.grpc.client;
 
 import com.eswar.grpc.user.UserEmailRequest;
+import com.eswar.grpc.user.UserIdRequest;
 import com.eswar.grpc.user.UserResponse;
 import com.eswar.grpc.user.UserServiceGrpc;
 import io.grpc.ManagedChannel;
@@ -25,5 +26,12 @@ public class GrpcUserServiceClient {
                 .setEmail(email)
                 .build();
         return stub.getUserByEmail(request);
+    }
+
+    public UserResponse getUserById(String id) {
+        UserIdRequest request = UserIdRequest.newBuilder()
+                .setId(id)
+                .build();
+        return stub.getUserById(request);
     }
 }

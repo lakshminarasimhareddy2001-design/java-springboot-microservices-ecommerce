@@ -82,4 +82,12 @@ public class RazorpayService {
         }
         return hex.toString();
     }
+
+    //  Webhook verification
+    public boolean verifyWebhookSignature(String payload, String signature) {
+
+        String generated = hmacSHA256(payload, secret);
+
+        return generated.equals(signature);
+    }
 }

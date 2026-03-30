@@ -1,12 +1,10 @@
 package com.eswar.authenticationservice.service;
 
-import com.eswar.authenticationservice.dto.AccessTokenResponseDto;
-import com.eswar.authenticationservice.dto.AuthenticationResponseDto;
-import com.eswar.authenticationservice.dto.LoginRequestDto;
-import com.eswar.authenticationservice.dto.RefreshTokenRequestDto;
-import com.eswar.authenticationservice.exception.UserNotFoundException;
-import com.eswar.authenticationservice.exception.UserServiceUnavailableException;
+import com.eswar.authenticationservice.dto.*;
+import com.eswar.authenticationservice.exception.BusinessException;
+import com.eswar.authenticationservice.exception.ErrorCode;
 import com.eswar.authenticationservice.grpc.client.GrpcUserServiceClient;
+import com.eswar.authenticationservice.grpc.mapper.GrpcExceptionMapper;
 import com.eswar.grpc.user.UserResponse;
 import io.grpc.StatusRuntimeException;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -34,38 +33,25 @@ public class AuthenticationServiceImp implements IAuthenticationService {
     @Override
     public AuthenticationResponseDto login(LoginRequestDto request) {
 
-       UserResponse user;
+        UserResponse user;
+
         try {
-          user = client.getUserByEmail(request.email());
+            user = client.getUserByEmail(request.email());
+
         } catch (StatusRuntimeException ex) {
-
-log.warn("grpc error from getUserByEmail",ex);
-            switch (ex.getStatus().getCode()) {
-
-                case NOT_FOUND ->
-                        throw new UserNotFoundException(request.email());
-
-                case UNAVAILABLE ->
-                        throw new UserServiceUnavailableException("User service unavailable");
-
-                default ->
-                        throw new RuntimeException("Unexpected gRPC error");
-            }
+            log.warn("gRPC error during login", ex);
+            throw GrpcExceptionMapper.map(ex);
         }
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        log.info("Received user from gRPC: {}", user.getEmail());
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         Set<String> roles = new HashSet<>(user.getRolesList());
 
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), roles);
+        String accessToken = jwtService.generateAccessToken(
+                user.getId(), user.getEmail(), roles);
+
         String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
         return new AuthenticationResponseDto(
@@ -82,41 +68,30 @@ log.warn("grpc error from getUserByEmail",ex);
     @Override
     public AccessTokenResponseDto refresh(RefreshTokenRequestDto request) {
 
-        if (request == null || request.refreshToken() == null
-                || !jwtService.isTokenValid(request.refreshToken())) {
-
-            throw new RuntimeException("Invalid refresh token");
+        if (request == null || request.refreshToken() == null) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_CREDENTIALS,
+                    "Invalid refresh token"
+            );
         }
+        jwtService.validateToken(request.refreshToken());
 
         String username = jwtService.extractUsername(request.refreshToken());
 
-
         UserResponse user;
+
         try {
             user = client.getUserByEmail(username);
+
         } catch (StatusRuntimeException ex) {
-
-            switch (ex.getStatus().getCode()) {
-
-                case NOT_FOUND ->
-                        throw new UserNotFoundException("User not found");
-
-                case UNAVAILABLE ->
-                        throw new UserServiceUnavailableException("User service unavailable");
-
-                default ->
-                        throw new RuntimeException("Unexpected gRPC error");
-            }
-        }
-
-
-        if (user == null) {
-            throw new UserNotFoundException("User not found");
+            log.warn("gRPC error during refresh", ex);
+            throw com.eswar.authenticationservice.grpc.mapper.GrpcExceptionMapper.map(ex);
         }
 
         Set<String> roles = new HashSet<>(user.getRolesList());
 
-        String accessToken = jwtService.generateAccessToken(user.getId(),user.getEmail(), roles);
+        String accessToken = jwtService.generateAccessToken(
+                user.getId(), user.getEmail(), roles);
 
         return new AccessTokenResponseDto(
                 accessToken,
