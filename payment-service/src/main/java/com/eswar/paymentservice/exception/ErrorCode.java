@@ -13,9 +13,10 @@ public enum ErrorCode {
  PAYMENT_ALREADY_VERIFIED(HttpStatus.CONFLICT, "Payment already verified"),
 
  // 💰 Razorpay / validation
+ INVALID_REQUEST(HttpStatus.BAD_REQUEST,"Invalid request"),
  INVALID_PAYMENT_SIGNATURE(HttpStatus.BAD_REQUEST, "Invalid payment signature"),
  INVALID_WEBHOOK_SIGNATURE(HttpStatus.UNAUTHORIZED, "Invalid webhook signature"),
-
+    INVALID_WEBHOOK_PAYLOAD(HttpStatus.BAD_REQUEST,"Invalid webhook payload"),
  // 🔧 External service
  PAYMENT_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Payment provider unavailable");
 

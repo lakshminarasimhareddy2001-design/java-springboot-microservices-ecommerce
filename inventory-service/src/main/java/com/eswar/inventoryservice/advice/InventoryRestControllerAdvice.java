@@ -1,18 +1,17 @@
-package com.eswar.authenticationservice.advice;
+package com.eswar.inventoryservice.advice;
 
-import com.eswar.authenticationservice.exception.BusinessException;
-import com.eswar.authenticationservice.exception.ErrorCode;
+import com.eswar.inventoryservice.exception.BusinessException;
+import com.eswar.inventoryservice.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
-
+@Slf4j
 @RestControllerAdvice
-@Log4j2
-public class AuthenticationRestControllerAdvice {
+public class InventoryRestControllerAdvice {
 
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusiness(BusinessException ex) {

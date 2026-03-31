@@ -13,7 +13,7 @@ public interface IPaymentRepository extends JpaRepository<PaymentEntity, UUID> {
 
         Optional<PaymentEntity> findByOrderId(UUID orderId);
 
-        Optional<PaymentEntity> findByTransactionId(String transactionId);
+        Optional<PaymentEntity> findByRazorpayOrderId(String razorPayOrderId);
 
         Page<PaymentEntity> findByUserId(UUID userId, Pageable pageable);
 

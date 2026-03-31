@@ -10,6 +10,8 @@ import com.eswar.paymentservice.kafka.events.OrderCreatedEvent;
 import com.eswar.paymentservice.kafka.producer.PaymentEventProducer;
 import com.eswar.paymentservice.mapper.IPaymentMapper;
 import com.eswar.paymentservice.repository.IPaymentRepository;
+import com.eswar.paymentservice.repository.IWebHookEventRepository;
+import com.eswar.paymentservice.validation.PaymentValidator;
 import com.razorpay.RazorpayException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,16 +36,24 @@ public class PaymentServiceImp implements IPaymentService {
     @Value("${razorpay.currency:INR}")
     private String currency;
 
+    private final PaymentValidator validator;
     private final IPaymentRepository paymentRepository;
     private final PaymentEventProducer producer;
     private final RazorpayService razorpayService;
     private final IPaymentMapper mapper;
+    private final IWebHookEventRepository webHookEventRepository;
 
     // ================= HELPER =================
 
-    private void validateOwnership(PaymentEntity payment, String userId) {
+    private void validateOwnership(PaymentEntity payment, Principal principal) {
+        if (principal == null || principal.getName() == null) {
+            throw new BusinessException(ErrorCode.PAYMENT_ACCESS_DENIED);
+        }
+
+        String userId = principal.getName();
+
         if (!payment.getUserId().toString().equals(userId)) {
-            log.warn("User {} attempted to access payment {} without permission",
+            log.warn("Unauthorized access: user {} → payment {}",
                     userId, payment.getId());
             throw new BusinessException(ErrorCode.PAYMENT_ACCESS_DENIED);
         }
@@ -55,13 +65,11 @@ public class PaymentServiceImp implements IPaymentService {
     @Transactional
             //for event action when order created
     public void processPayment(OrderCreatedEvent event) {
-
         PaymentEntity payment = new PaymentEntity();
         payment.setOrderId(event.orderId());
         payment.setUserId(event.customerId());
         payment.setAmount(event.totalAmount());
         payment.setStatus(PaymentStatus.INITIATED);
-
         paymentRepository.save(payment);
     }
 
@@ -71,10 +79,7 @@ public class PaymentServiceImp implements IPaymentService {
     @Transactional
     //to get order id for frontend
     public PaymentCreateResponse createPayment(UUID orderId, Principal principal) throws RazorpayException {
-
-        if (principal == null) {
-            throw new BusinessException(ErrorCode.PAYMENT_ACCESS_DENIED);
-        }
+        validator.validateCreatePayment(orderId);
         //find payment entity after created by order event
         PaymentEntity payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> {
@@ -83,12 +88,12 @@ public class PaymentServiceImp implements IPaymentService {
                 });
 
         //find owner not allow eg: admin  & others to modify
-        validateOwnership(payment, principal.getName());
+        validateOwnership(payment, principal);
 
         // Idempotency check
-        if (payment.getTransactionId() != null) {
+        if (payment.getRazorpayOrderId() != null) {
             return new PaymentCreateResponse(
-                    payment.getTransactionId(),
+                    payment.getRazorpayOrderId(),
                     razorpayKey,
                     currency,
                     payment.getAmount().multiply(BigDecimal.valueOf(100)).longValue()
@@ -99,14 +104,13 @@ public class PaymentServiceImp implements IPaymentService {
         String razorpayOrderId;
         try {
              razorpayOrderId = razorpayService.createOrder(payment.getAmount(), currency);
-            payment.setTransactionId(razorpayOrderId);
         } catch (RazorpayException ex) {
-            log.error("Razorpay service failed for order {}: {}", orderId, ex.getMessage());
+            log.error("Razorpay service failed for order {}", orderId, ex);
             throw new BusinessException(ErrorCode.PAYMENT_SERVICE_UNAVAILABLE);
         }
 
         //update transaction using razor order id
-        payment.setTransactionId(razorpayOrderId);
+        payment.setRazorpayOrderId(razorpayOrderId);
 
         return new PaymentCreateResponse(
                 razorpayOrderId,
@@ -121,12 +125,13 @@ public class PaymentServiceImp implements IPaymentService {
     //verify payment details from frontend
     public PaymentResponse verifyPayment(PaymentVerifyRequest request, Principal principal) {
 
+         validator.validateVerifyPayment(request);
         //get payment entity using transaction : order id from razorpay
         PaymentEntity payment = paymentRepository
-                .findByTransactionId(request.razorpayOrderId())
+                .findByRazorpayOrderId(request.razorpayOrderId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
-        validateOwnership(payment, principal.getName());
+        validateOwnership(payment, principal);
 
 
         // Prevent duplicate verification
@@ -146,7 +151,7 @@ public class PaymentServiceImp implements IPaymentService {
         //sending event and update status
         if (isValid) {
             payment.setStatus(PaymentStatus.PENDING);
-            payment.setPaymentId(request.razorpayPaymentId());
+            payment.setRazorpayPaymentId(request.razorpayPaymentId());
             return new PaymentResponse("SUCCESS", "Payment verified is pending from webhook");
         } else {
             payment.setStatus(PaymentStatus.FAILED);
@@ -158,6 +163,7 @@ public class PaymentServiceImp implements IPaymentService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<PaymentResponse> getMyPayments(Principal principal, Pageable pageable) {
+
 
         UUID userId = UUID.fromString(principal.getName());
 
@@ -222,25 +228,42 @@ public class PaymentServiceImp implements IPaymentService {
     @Transactional
     public void handleWebhook(String payload, String signature) {
 
+        validator.validateWebhook(payload, signature);
+
         boolean isValid = razorpayService.verifyWebhookSignature(payload, signature);
 
         if (!isValid) {
             throw new BusinessException(ErrorCode.INVALID_WEBHOOK_SIGNATURE);
         }
 
-        JSONObject event = new JSONObject(payload);
-        String eventType = event.getString("event");
+        JSONObject event;
 
-        JSONObject paymentJson = event
-                .getJSONObject("payload")
-                .getJSONObject("payment")
-                .getJSONObject("entity");
+        try {
+            event = new JSONObject(payload);
+        } catch (Exception e) {
+            log.error("Invalid webhook payload: {}", payload, e);
+            throw new BusinessException(ErrorCode.INVALID_WEBHOOK_PAYLOAD);
+        }
+
+        String eventType = event.getString("event");
+        JSONObject paymentJson;
+
+        try {
+            paymentJson = event
+                    .getJSONObject("payload")
+                    .getJSONObject("payment")
+                    .getJSONObject("entity");
+        } catch (Exception e) {
+            log.error("Malformed webhook structure: {}", payload, e);
+            throw new BusinessException(ErrorCode.INVALID_WEBHOOK_PAYLOAD);
+        }
 
         String razorpayOrderId = paymentJson.getString("order_id");
+
         String paymentId = paymentJson.getString("id");
 
         PaymentEntity payment = paymentRepository
-                .findByTransactionId(razorpayOrderId)
+                .findByRazorpayOrderId(razorpayOrderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
 
         // ✅ Idempotency
@@ -251,7 +274,7 @@ public class PaymentServiceImp implements IPaymentService {
         if ("payment.captured".equals(eventType)) {
 
             payment.setStatus(PaymentStatus.SUCCESS);
-            payment.setPaymentId(paymentId);
+            payment.setRazorpayPaymentId(paymentId);
 
             producer.sendPaymentStatus(
                     payment.getOrderId(),

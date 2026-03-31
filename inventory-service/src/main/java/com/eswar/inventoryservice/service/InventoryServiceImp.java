@@ -3,7 +3,6 @@ package com.eswar.inventoryservice.service;
 import com.eswar.inventoryservice.dto.InventoryDto;
 import com.eswar.inventoryservice.dto.PageResponse;
 import com.eswar.inventoryservice.entity.InventoryEntity;
-import com.eswar.inventoryservice.exception.InventoryNotFoundException;
 import com.eswar.inventoryservice.kafka.event.OrderCreatedEvent;
 import com.eswar.inventoryservice.kafka.event.OrderItem;
 import com.eswar.inventoryservice.mapper.IInventoryMapper;
@@ -23,7 +22,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class InventoryServiceImp implements IInventoryService{
+public class  InventoryServiceImp implements IInventoryService{
 
     private  final IInventoryRepository inventoryRepository;
     private final IInventoryMapper  inventoryMapper;
@@ -65,7 +64,7 @@ public class InventoryServiceImp implements IInventoryService{
         return true;
     }
 
-@Transactional
+    @Transactional
     public InventoryDto createInventory(InventoryDto dto) {
 
         InventoryEntity entity = inventoryMapper.toEntity(dto);

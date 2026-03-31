@@ -7,6 +7,7 @@ import com.eswar.paymentservice.dto.PaymentResponse;
 import com.eswar.paymentservice.dto.PaymentVerifyRequest;
 import com.eswar.paymentservice.service.IPaymentService;
 import com.razorpay.RazorpayException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springdoc.core.annotations.ParameterObject;
@@ -42,7 +43,7 @@ public class PaymentRestController {
     @PostMapping("/verify")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> verifyPayment(
-            @RequestBody PaymentVerifyRequest request,
+            @RequestBody  @Valid  PaymentVerifyRequest request,
             Principal principal) {
 
         return ResponseEntity.ok(paymentService.verifyPayment(request, principal));
