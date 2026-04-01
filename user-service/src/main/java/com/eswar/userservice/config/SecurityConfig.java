@@ -1,6 +1,8 @@
 package com.eswar.userservice.config;
 
 import com.eswar.userservice.filter.HeaderAuthenticationFilter;
+import com.eswar.userservice.handler.SecurityExceptionHandler;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +18,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+
+    private final SecurityExceptionHandler securityExceptionHandler;
 
     private static final String[] SWAGGER_WHITELIST = {
             "/swagger-ui.html",
@@ -35,9 +41,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(@NonNull HttpSecurity httpSecurity){
-
-
-
         return  httpSecurity
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
@@ -68,6 +71,9 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new HeaderAuthenticationFilter(),
                         UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex->
+                ex.authenticationEntryPoint(securityExceptionHandler)
+                .accessDeniedHandler(securityExceptionHandler))
                 .build();
 
 

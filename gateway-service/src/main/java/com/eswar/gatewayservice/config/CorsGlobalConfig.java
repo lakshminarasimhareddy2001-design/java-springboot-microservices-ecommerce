@@ -13,7 +13,7 @@ public class CorsGlobalConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://10.144.131.219:7777");
+        config.addAllowedOrigin("http://10.105.105.219:7777");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);

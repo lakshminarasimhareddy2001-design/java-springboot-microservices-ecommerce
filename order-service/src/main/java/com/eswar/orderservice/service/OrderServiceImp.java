@@ -1,5 +1,6 @@
 package com.eswar.orderservice.service;
 
+import com.eswar.grpc.user.ProductResponse;
 import com.eswar.orderservice.constants.OrderStatus;
 import com.eswar.orderservice.dto.OrderDto;
 import com.eswar.orderservice.dto.OrderItemDto;
@@ -9,16 +10,18 @@ import com.eswar.orderservice.entity.OrderEntity;
 import com.eswar.orderservice.entity.OrderedItemEntity;
 import com.eswar.orderservice.entity.OrderedItemId;
 import com.eswar.orderservice.exceptions.BusinessException;
-import com.eswar.orderservice.exceptions.InvalidUserIdException;
-import com.eswar.orderservice.exceptions.OrderNotFoundException;
+import com.eswar.orderservice.exceptions.ErrorCode;
 import com.eswar.orderservice.grpc.client.GrpcProductServiceClient;
+import com.eswar.orderservice.grpc.mapper.GrpcExceptionMapper;
 import com.eswar.orderservice.kafka.event.OrderCreatedEvent;
 import com.eswar.orderservice.kafka.event.OrderItemEvent;
 import com.eswar.orderservice.kafka.producer.OrderEventProducer;
 import com.eswar.orderservice.mapper.IOrderMapper;
 import com.eswar.orderservice.repository.IOrderRepository;
+import com.eswar.orderservice.service.IOrderService;
+import io.grpc.StatusRuntimeException;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,44 +29,58 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class OrderServiceImp implements IOrderService{
+public class OrderServiceImp implements IOrderService {
 
     private final IOrderRepository orderRepository;
     private final IOrderMapper mapper;
     private final OrderEventProducer orderEventProducer;
     private final GrpcProductServiceClient grpcProductServiceClient;
 
+    // ================= HELPER =================
+
+    private UUID parseUUID(String id, ErrorCode errorCode) {
+        try {
+            return UUID.fromString(id);
+        } catch (Exception e) {
+            throw new BusinessException(errorCode);
+        }
+    }
+
+    private UUID extractUserId(Principal principal) {
+        if (principal == null || principal.getName() == null) {
+            throw new BusinessException(ErrorCode.ACCESS_DENIED);
+        }
+        return parseUUID(principal.getName(), ErrorCode.INVALID_USER_ID);
+    }
+
+    // ================= CREATE ORDER =================
+
     @Override
     @Transactional
     public OrderResponseDto createOrder(OrderDto dto, Principal principal) {
 
-        //getting entity
+        UUID customerId = extractUserId(principal);
+
         OrderEntity order = mapper.toEntity(dto);
-        //set status
         order.setStatus(OrderStatus.CREATED);
+        order.setCustomerId(customerId);
 
-        //ordered items
         List<OrderedItemEntity> items = new ArrayList<>();
-
-        //total amount of order
         BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (OrderItemDto itemDto : dto.items()) {
 
-            // 🔥 CALL gRPC PRODUCT SERVICE
-            var product = grpcProductServiceClient.getProduct(itemDto.productId());
+            var product = getProductOrThrow(itemDto.productId());
 
             BigDecimal price = BigDecimal.valueOf(product.getPrice());
-
-
-            // Calculate total
             BigDecimal itemTotal = price.multiply(BigDecimal.valueOf(itemDto.quantity()));
 
-            //added to total amount
             totalAmount = totalAmount.add(itemTotal);
 
             OrderedItemId id = new OrderedItemId();
@@ -75,37 +92,27 @@ public class OrderServiceImp implements IOrderService{
             item.setQuantity(itemDto.quantity());
             item.setPrice(price);
 
-          //calculate total items
             items.add(item);
         }
 
-       //added total items to order
         order.setItems(items);
 
-        try {
-            order.setCustomerId(UUID.fromString(principal.getName()));
-        } catch (Exception e) {
-            throw new InvalidUserIdException("Invalid userId in token");
-        }
-
-        //save to db
         OrderEntity saved = orderRepository.save(order);
 
-        //send event
-        publishOrderCreatedEvent(saved,totalAmount);
+        publishOrderCreatedEvent(saved, totalAmount);
 
         return mapper.toResponse(saved);
     }
 
+    // ================= GET =================
+
     @Override
     public PageResponse<OrderResponseDto> getALlOrders(Pageable pageable) {
-        //see all orders
 
-        Page<OrderEntity> page=orderRepository.findAll(pageable);
-        List<OrderResponseDto> content=page.getContent().stream().map(mapper::toResponse).toList();
+        Page<OrderEntity> page = orderRepository.findAll(pageable);
 
         return new PageResponse<>(
-                content,
+                page.getContent().stream().map(mapper::toResponse).toList(),
                 page.getNumber(),
                 page.getSize(),
                 page.getTotalElements(),
@@ -116,54 +123,48 @@ public class OrderServiceImp implements IOrderService{
 
     @Override
     public OrderResponseDto getOrderById(String orderId) {
-        UUID id;
-        try {
-            id = UUID.fromString(orderId);
-        } catch (Exception e) {
-            throw new OrderNotFoundException("Order ID is not valid UUID");
-        }
+
+        UUID id = parseUUID(orderId, ErrorCode.ORDER_INVALID_ID);
 
         OrderEntity order = orderRepository.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         return mapper.toResponse(order);
     }
 
+    // ================= UPDATE =================
+
     @Override
     @Transactional
-    public OrderResponseDto updateOrder(String orderId, OrderDto orderDto) {
+    public OrderResponseDto updateOrder(String orderId, OrderDto dto) {
 
-
-        UUID id;
-        try {
-            id = UUID.fromString(orderId);
-        } catch (Exception e) {
-            throw new OrderNotFoundException(" Order ID is not valid UUID");
-        }
+        UUID id = parseUUID(orderId, ErrorCode.ORDER_INVALID_ID);
 
         OrderEntity existing = orderRepository.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
         if (existing.getStatus() != OrderStatus.CREATED) {
-            throw new BusinessException("BUSINESS_ERROR","ORDER_CANNOT_BE_UPDATED");
+            throw new BusinessException(ErrorCode.ORDER_CANNOT_UPDATE);
         }
 
-        // Only allow updating items and recalculate total
         List<OrderedItemEntity> items = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
 
-        for (OrderItemDto itemDto : orderDto.items()) {
-            var product = grpcProductServiceClient.getProduct(itemDto.productId());
-            BigDecimal price = BigDecimal.valueOf(product.getPrice());
+        for (OrderItemDto itemDto : dto.items()) {
 
+            var product = getProductOrThrow(itemDto.productId());
+
+            BigDecimal price = BigDecimal.valueOf(product.getPrice());
             BigDecimal itemTotal = price.multiply(BigDecimal.valueOf(itemDto.quantity()));
+
             totalAmount = totalAmount.add(itemTotal);
 
-            OrderedItemId orderedItemId = new OrderedItemId();
-            orderedItemId.setOrder(existing);
-            orderedItemId.setProductId(itemDto.productId());
+            OrderedItemId itemId = new OrderedItemId();
+            itemId.setOrder(existing);
+            itemId.setProductId(itemDto.productId());
 
             OrderedItemEntity item = new OrderedItemEntity();
-            item.setId(orderedItemId);
+            item.setId(itemId);
             item.setQuantity(itemDto.quantity());
             item.setPrice(price);
 
@@ -175,61 +176,55 @@ public class OrderServiceImp implements IOrderService{
 
         OrderEntity saved = orderRepository.save(existing);
 
-        publishOrderCreatedEvent(saved, totalAmount); // optionally publish updated event
+        publishOrderCreatedEvent(saved, totalAmount);
 
         return mapper.toResponse(saved);
     }
+
+    // ================= CANCEL =================
 
     @Override
     @Transactional
     public void cancelOrder(String orderId) {
 
-        UUID id;
-        try {
-            id = UUID.fromString(orderId);
-        } catch (Exception e) {
-            throw new OrderNotFoundException("INVALID_ORDER_ID, Order ID is not valid UUID");
-        }
+        UUID id = parseUUID(orderId, ErrorCode.ORDER_INVALID_ID);
 
         OrderEntity order = orderRepository.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException("ORDER_NOT_FOUND, Order not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new BusinessException(ErrorCode.ORDER_ALREADY_CANCELLED);
+        }
 
         order.setStatus(OrderStatus.CANCELLED);
-        orderRepository.save(order);
 
-        // Optional: publish cancel event
+        orderRepository.save(order);
     }
 
+    // ================= USER =================
 
     @Override
     public boolean isOrderOwnedByUser(String orderId, String userId) {
 
-        UUID id;
         try {
-            id = UUID.fromString(orderId);
+            UUID orderUUID = UUID.fromString(orderId);
+            return orderRepository.findById(orderUUID)
+                    .map(o -> o.getCustomerId().toString().equals(userId))
+                    .orElse(false);
         } catch (Exception e) {
             return false;
         }
-
-        return orderRepository.findById(id)
-                .map(o -> o.getCustomerId().toString().equals(userId))
-                .orElse(false);
     }
 
     @Override
-    public PageResponse<OrderResponseDto> getOrdersByCustomerId(String customerId,Pageable pageable) {
-        UUID id;
-        try {
-            id = UUID.fromString(customerId);
-        } catch (Exception e) {
-            throw new InvalidUserIdException("Invalid Customer Id");
-        }
+    public PageResponse<OrderResponseDto> getOrdersByCustomerId(String customerId, Pageable pageable) {
 
-        Page<OrderEntity> page=orderRepository.findByCustomerId(id,pageable);
-        List<OrderResponseDto> content=page.getContent().stream().map(mapper::toResponse).toList();
+        UUID id = parseUUID(customerId, ErrorCode.INVALID_USER_ID);
+
+        Page<OrderEntity> page = orderRepository.findByCustomerId(id, pageable);
 
         return new PageResponse<>(
-                content,
+                page.getContent().stream().map(mapper::toResponse).toList(),
                 page.getNumber(),
                 page.getSize(),
                 page.getTotalElements(),
@@ -238,38 +233,56 @@ public class OrderServiceImp implements IOrderService{
         );
     }
 
+    // ================= EVENT HANDLING =================
 
+    @Override
     @Transactional
-    public void updateOrderStatus(UUID orderId,UUID eventId, String eventType, String status, String paymentReference) {
+    public void updateOrderStatus(UUID orderId, UUID eventId, String eventType, String status, String paymentReference) {
 
         OrderEntity order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         if (order.getProcessedEventIds().contains(eventId)) {
-            return; // Already processed
+            return;
         }
+
         switch (eventType) {
 
-            case "INVENTORY":
-                if (status.equals("SUCCESS")) {
+            case "INVENTORY" -> {
+                if ("SUCCESS".equals(status)) {
                     order.setStatus(OrderStatus.STOCK_RESERVED);
                 } else {
                     order.setStatus(OrderStatus.FAILED);
                 }
-                break;
+            }
 
-            case "PAYMENT":
-                if (status.equals("SUCCESS")) {
+            case "PAYMENT" -> {
+                if ("SUCCESS".equals(status)) {
                     order.setStatus(OrderStatus.CONFIRMED);
-                    order.setPaymentReference(paymentReference); // ✅ important
+                    order.setPaymentReference(paymentReference);
                 } else {
                     order.setStatus(OrderStatus.CANCELLED);
                 }
-                break;
+            }
+
+            default -> throw new BusinessException(ErrorCode.INVALID_REQUEST);
         }
+
+        order.getProcessedEventIds().add(eventId);
 
         orderRepository.save(order);
     }
+
+    // ================= PRIVATE =================
+
+    private ProductResponse getProductOrThrow(UUID productId) {
+        try {
+            return grpcProductServiceClient.getProduct(productId);
+        } catch (StatusRuntimeException e) {
+          throw   GrpcExceptionMapper.map(e);
+        }
+    }
+
     private void publishOrderCreatedEvent(@NonNull OrderEntity order, BigDecimal totalAmount) {
 
         List<OrderItemEvent> items = order.getItems().stream()
@@ -279,16 +292,13 @@ public class OrderServiceImp implements IOrderService{
                 ))
                 .toList();
 
-        OrderCreatedEvent event =
-                new OrderCreatedEvent(
-                        order.getId(),
-                        order.getCustomerId(),
-                        totalAmount, // ✅ now correct
-                        items
-                );
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                order.getId(),
+                order.getCustomerId(),
+                totalAmount,
+                items
+        );
 
         orderEventProducer.sendOrderCreatedEvent(event);
     }
-
-
 }

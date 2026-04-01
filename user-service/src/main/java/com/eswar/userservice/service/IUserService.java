@@ -1,5 +1,6 @@
 package com.eswar.userservice.service;
 
+import com.eswar.userservice.constants.UserRole;
 import com.eswar.userservice.dto.PageResponse;
 import com.eswar.userservice.dto.UserGrpcResponse;
 import com.eswar.userservice.dto.UserRequestDto;
@@ -19,4 +20,6 @@ public interface IUserService {
     PageResponse<UserResponseDto> getAllUsers(Pageable pageable);
     void deleteUser(UUID id);
     UserResponseDto updateUser(UUID id, UserRequestDto request);
+    UserResponseDto removeRoleFromUser(UUID id, UserRole role);
+   UserResponseDto   addRoleToUser(UUID id,UserRole role);
 }

@@ -1,5 +1,6 @@
 package com.eswar.userservice.rest;
 
+import com.eswar.userservice.constants.UserRole;
 import com.eswar.userservice.dto.PageResponse;
 import com.eswar.userservice.dto.UserRequestDto;
 import com.eswar.userservice.dto.UserResponseDto;
@@ -28,6 +29,8 @@ public class UserRestController {
 
     private final IUserService userService;
     private final PasswordEncoder passwordEncoder;
+
+
 
     @PostMapping
     @Operation(summary = "Create a new user", description = "Creates a new user with roles and returns the created user")
@@ -76,5 +79,19 @@ public class UserRestController {
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/roles/add")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Add a role to user")
+    public ResponseEntity<UserResponseDto> addRole(@PathVariable UUID id, @RequestParam UserRole role) {
+        return ResponseEntity.ok(userService.addRoleToUser(id, role));
+    }
+
+    @PatchMapping("/{id}/roles/remove")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Remove a role from user")
+    public ResponseEntity<UserResponseDto> removeRole(@PathVariable UUID id, @RequestParam UserRole role) {
+        return ResponseEntity.ok(userService.removeRoleFromUser(id, role));
     }
 }

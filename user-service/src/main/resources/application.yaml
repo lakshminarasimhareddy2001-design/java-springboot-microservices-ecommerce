@@ -12,3 +12,13 @@ spring:
     active: dev
   config:
     import: optional:configserver:http://localhost:8888
+
+
+logging:
+  level:
+    # THIS IS THE TRACE COMMAND: Shows the actual values (UUID, Role)
+    org.hibernate.orm.jdbc.bind: trace
+    # Optional: Shows the results extracted from the Database
+    org.hibernate.orm.jdbc.extract: trace
+    # Optional: Shows the SQL logic and execution
+    org.hibernate.sql: debug

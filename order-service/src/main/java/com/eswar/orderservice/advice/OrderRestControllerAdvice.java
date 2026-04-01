@@ -1,21 +1,17 @@
-package com.eswar.productservice.advice;
+package com.eswar.orderservice.advice;
 
-import com.eswar.productservice.exception.BusinessException;
-import com.eswar.productservice.exception.ErrorCode;
+import com.eswar.orderservice.exceptions.BusinessException;
+import com.eswar.orderservice.exceptions.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.net.URI;
 import java.time.Instant;
-
 @RestControllerAdvice
 @Slf4j
-public class ProductRestControllerAdvice {
-
+public class OrderRestControllerAdvice {
 
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusiness(BusinessException ex) {

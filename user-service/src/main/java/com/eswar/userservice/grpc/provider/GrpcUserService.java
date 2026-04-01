@@ -6,7 +6,7 @@ import com.eswar.grpc.user.UserResponse;
 import com.eswar.grpc.user.UserServiceGrpc;
 import com.eswar.userservice.constants.UserRole;
 import com.eswar.userservice.dto.UserGrpcResponse;
-import com.eswar.userservice.exception.UserNotFoundException;
+import com.eswar.userservice.exception.BusinessException;
 import com.eswar.userservice.service.IUserService;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +70,7 @@ public class GrpcUserService extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
-        } catch (UserNotFoundException ex) {
+        } catch (BusinessException ex) {
 
             responseObserver.onError(
                     io.grpc.Status.NOT_FOUND

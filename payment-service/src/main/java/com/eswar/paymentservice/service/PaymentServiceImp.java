@@ -1,8 +1,10 @@
 package com.eswar.paymentservice.service;
 
 import com.eswar.paymentservice.constatns.PaymentStatus;
+import com.eswar.paymentservice.constatns.WebhookStatus;
 import com.eswar.paymentservice.dto.*;
 import com.eswar.paymentservice.entity.PaymentEntity;
+import com.eswar.paymentservice.entity.WebhookEventEntity;
 import com.eswar.paymentservice.exception.BusinessException;
 import com.eswar.paymentservice.exception.ErrorCode;
 import com.eswar.paymentservice.kafka.constants.EventStatus;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.security.Principal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -245,7 +248,15 @@ public class PaymentServiceImp implements IPaymentService {
             throw new BusinessException(ErrorCode.INVALID_WEBHOOK_PAYLOAD);
         }
 
+        String eventId = event.getString("id");
         String eventType = event.getString("event");
+
+        // ✅ Duplicate check
+        if (webHookEventRepository.findByEventId(eventId).isPresent()) {
+            log.info("Duplicate webhook received: {}", eventId);
+            return;
+        }
+
         JSONObject paymentJson;
 
         try {
@@ -259,43 +270,67 @@ public class PaymentServiceImp implements IPaymentService {
         }
 
         String razorpayOrderId = paymentJson.getString("order_id");
-
         String paymentId = paymentJson.getString("id");
 
-        PaymentEntity payment = paymentRepository
-                .findByRazorpayOrderId(razorpayOrderId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+        // ✅ Save webhook event
+        WebhookEventEntity webhookEvent = new WebhookEventEntity();
+        webhookEvent.setEventId(eventId);
+        webhookEvent.setEventType(eventType);
+        webhookEvent.setPayload(payload);
+        webhookEvent.setResourceId(razorpayOrderId);
 
-        // ✅ Idempotency
-        if (payment.getStatus() == PaymentStatus.SUCCESS) {
-            return;
+        webHookEventRepository.save(webhookEvent);
+
+        try {
+
+            webhookEvent.setStatus(WebhookStatus.PROCESSING);
+
+            PaymentEntity payment = paymentRepository
+                    .findByRazorpayOrderId(razorpayOrderId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.PAYMENT_NOT_FOUND));
+
+            if (payment.getStatus() == PaymentStatus.SUCCESS) {
+                webhookEvent.setStatus(WebhookStatus.PROCESSED);
+                return;
+            }
+
+            if ("payment.captured".equals(eventType)) {
+
+                payment.setStatus(PaymentStatus.SUCCESS);
+                payment.setRazorpayPaymentId(paymentId);
+
+                producer.sendPaymentStatus(
+                        payment.getOrderId(),
+                        EventStatus.SUCCESS,
+                        "Payment Successful",
+                        paymentId
+                );
+
+            } else if ("payment.failed".equals(eventType)) {
+
+                payment.setStatus(PaymentStatus.FAILED);
+
+                producer.sendPaymentStatus(
+                        payment.getOrderId(),
+                        EventStatus.FAILED,
+                        "Payment Failed",
+                        null
+                );
+            }
+
+            paymentRepository.save(payment);
+
+            webhookEvent.setStatus(WebhookStatus.PROCESSED);
+            webhookEvent.setProcessedAt(Instant.now());
+
+        } catch (Exception e) {
+
+            log.error("Webhook processing failed: {}", eventId, e);
+
+            webhookEvent.setStatus(WebhookStatus.FAILED);
+            webhookEvent.setErrorMessage(e.getMessage());
         }
 
-        if ("payment.captured".equals(eventType)) {
-
-            payment.setStatus(PaymentStatus.SUCCESS);
-            payment.setRazorpayPaymentId(paymentId);
-
-            producer.sendPaymentStatus(
-                    payment.getOrderId(),
-                    EventStatus.SUCCESS,
-                    "Payment Successful",
-                    paymentId
-            );
-
-        } else if ("payment.failed".equals(eventType)) {
-
-            payment.setStatus(PaymentStatus.FAILED);
-
-            producer.sendPaymentStatus(
-                    payment.getOrderId(),
-                    EventStatus.FAILED,
-                    "Payment Failed",
-                    null
-            );
-        }
-
-        paymentRepository.save(payment);
+        webHookEventRepository.save(webhookEvent);
     }
-
 }

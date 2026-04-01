@@ -1,15 +1,17 @@
-package com.eswar.gatewayservice.exceptions;
+package com.eswar.productservice.exception;
 
 import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
+   //user
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
+    USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "User already exists"),
+    EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "Email already registered"),
+    PHONE_ALREADY_EXISTS(HttpStatus.CONFLICT, "Phone number already registered"),
 
     //auth
-    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "Token expired"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Invalid credentials"),
-    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "Invalid token"),
-    TOKEN_MALFORMED(HttpStatus.UNAUTHORIZED, "Malformed token"),
-    UNAUTHENTICATED(HttpStatus.UNAUTHORIZED, "User is not authenticated"),
+
 
     // service (VERY IMPORTANT for microservices)
     SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Service temporarily unavailable"),

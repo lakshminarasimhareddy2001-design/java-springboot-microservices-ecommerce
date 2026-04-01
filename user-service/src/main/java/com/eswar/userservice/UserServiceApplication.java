@@ -57,9 +57,13 @@ public class UserServiceApplication {
 		// Add initializer to inject .env values into Spring Environment
 		app.addInitializers(ctx -> {
 			Dotenv dotenv = Dotenv.load();
+			String rawUrl = Objects.requireNonNull(dotenv.get("DB_URL"))
+					.trim()
+					.replace("'", "")
+					.replace("\"", "");
 
 			Map<String, Object> properties = new HashMap<>();
-			properties.put("DB_URL", Objects.requireNonNull(dotenv.get("DB_URL")));
+			properties.put("DB_URL", Objects.requireNonNull(rawUrl));
 			properties.put("DB_USER_NAME", Objects.requireNonNull(dotenv.get("DB_USER_NAME")));
 			properties.put("DB_PASSWORD", Objects.requireNonNull(dotenv.get("DB_PASSWORD")));
 

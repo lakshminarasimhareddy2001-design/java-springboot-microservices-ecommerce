@@ -42,12 +42,13 @@ public class JwtValidationGatewayFilterFactory
             // 1️⃣ Extract Authorization header
             List<String> authHeaders = exchange.getRequest().getHeaders().getOrEmpty("Authorization");
             if (authHeaders.isEmpty()) {
-                return unauthorized(exchange, "Authorization header is missing");
+                // Return Mono.error to trigger your Global Exception Handler
+                return Mono.error(new BusinessException( ErrorCode.UNAUTHENTICATED,"Authorization header is missing"));
             }
 
             String authHeader = authHeaders.getFirst();
             if (!authHeader.startsWith("Bearer ")) {
-                return unauthorized(exchange, "Invalid Authorization header format");
+                return Mono.error(new BusinessException( ErrorCode.UNAUTHENTICATED, "Invalid Authorization header format"));
             }
 
             String token = authHeader.substring(7);
@@ -79,11 +80,6 @@ public class JwtValidationGatewayFilterFactory
         };
     }
 
-    private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
-        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-        log.warn("Unauthorized access: {}", message);
-        return exchange.getResponse().setComplete();
-    }
 
     public static class Config {
         // Add fields if needed (header names, secret keys, etc.)

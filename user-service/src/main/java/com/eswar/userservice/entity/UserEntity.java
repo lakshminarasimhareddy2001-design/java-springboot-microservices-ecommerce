@@ -9,17 +9,16 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
-@EqualsAndHashCode(callSuper = false)
 @Entity
-@Data
 @Table(name = "users")
 @Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class UserEntity extends AbstractAuditingEntity {
 
     @Id
@@ -41,6 +40,7 @@ public class UserEntity extends AbstractAuditingEntity {
     @NotBlank
     @Size(max = 150)
     @Column(name = "email", nullable = false, unique = true)
+    @EqualsAndHashCode.Include
     private String email;
 
     @NotBlank
@@ -80,7 +80,7 @@ public class UserEntity extends AbstractAuditingEntity {
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.LAZY)
     @CollectionTable(
             name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id")
+            joinColumns = @JoinColumn(name = "user_id"),uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "role"})
     )
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
